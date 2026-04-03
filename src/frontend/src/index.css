@@ -78,6 +78,19 @@
   }
 }
 
+/* ===== INPUT FIELD READABILITY ===== */
+/* Ensure all input fields have high-contrast, clearly readable text */
+.print-input {
+  color: #1e293b;
+  font-weight: 500;
+  background-color: #ffffff;
+}
+
+.print-input::placeholder {
+  color: #94a3b8;
+  font-weight: 400;
+}
+
 /* ===== PREMIUM INVOICE DESIGN ===== */
 
 /* Top gradient banner */
@@ -243,6 +256,8 @@
     padding: 0 !important;
     outline: none !important;
     box-shadow: none !important;
+    color: #1e293b !important;
+    font-weight: 500 !important;
   }
 
   /* Select fields as plain text */

@@ -8,7 +8,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import html2canvas from "html2canvas";
 import {
   Download,
   Loader2,
@@ -20,6 +19,18 @@ import {
   Trash2,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
+// html2canvas is loaded from CDN in index.html
+declare const html2canvas: (
+  element: HTMLElement,
+  options?: {
+    scale?: number;
+    useCORS?: boolean;
+    allowTaint?: boolean;
+    backgroundColor?: string | null;
+    logging?: boolean;
+  },
+) => Promise<HTMLCanvasElement>;
 
 type MedicineType = "ট্যাবলেট" | "সিরাপ" | "ক্যাপসুল" | "ড্রপ";
 type UnitLabel = "টি" | "পিস" | "বক্স" | "প্যাকেট" | "পাতা";
@@ -50,6 +61,9 @@ const FIELD_STYLE: React.CSSProperties = {
   height: "40px",
   fontSize: "14px",
   padding: "8px 10px",
+  color: "#1e293b",
+  fontWeight: "500",
+  backgroundColor: "#ffffff",
 };
 
 function getUnitLabel(type: MedicineType): string {
@@ -210,7 +224,7 @@ function MedicineNameInput({
         onBlur={handleBlur}
         onKeyDown={handleKeyDown}
         placeholder="ঔষধের নাম..."
-        className="print-input w-full border border-border rounded bg-background focus:outline-none focus:ring-1 focus:ring-ring overflow-x-auto"
+        className="print-input w-full border border-border rounded focus:outline-none focus:ring-1 focus:ring-ring overflow-x-auto"
         style={{ ...FIELD_STYLE, whiteSpace: "nowrap" }}
         data-ocid={`invoice.medicine_name.input.${index + 1}`}
         autoComplete="off"
@@ -789,7 +803,7 @@ export default function App() {
                         >
                           <SelectTrigger
                             className="print-select border-slate-200"
-                            style={FIELD_STYLE}
+                            style={{ ...FIELD_STYLE, color: "#1e293b" }}
                             data-ocid={`invoice.type.select.${index + 1}`}
                           >
                             <SelectValue />
@@ -811,7 +825,7 @@ export default function App() {
                               updateRow(row.id, "quantity", e.target.value)
                             }
                             placeholder=""
-                            className="print-input w-full min-w-[64px] border border-slate-200 rounded bg-background focus:outline-none focus:ring-1 focus:ring-blue-400"
+                            className="print-input w-full min-w-[64px] border border-slate-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-400"
                             style={FIELD_STYLE}
                             data-ocid={`invoice.quantity.input.${index + 1}`}
                           />
@@ -837,7 +851,7 @@ export default function App() {
                             updateRow(row.id, "unitPrice", e.target.value)
                           }
                           placeholder=""
-                          className="print-input w-full border border-slate-200 rounded bg-background text-right focus:outline-none focus:ring-1 focus:ring-blue-400"
+                          className="print-input w-full border border-slate-200 rounded text-right focus:outline-none focus:ring-1 focus:ring-blue-400"
                           style={FIELD_STYLE}
                           data-ocid={`invoice.unit_price.input.${index + 1}`}
                         />
@@ -850,7 +864,7 @@ export default function App() {
                             updateRow(row.id, "units", e.target.value)
                           }
                           placeholder=""
-                          className="print-input w-full border border-slate-200 rounded bg-background text-right focus:outline-none focus:ring-1 focus:ring-blue-400"
+                          className="print-input w-full border border-slate-200 rounded text-right focus:outline-none focus:ring-1 focus:ring-blue-400"
                           style={FIELD_STYLE}
                           data-ocid={`invoice.units.input.${index + 1}`}
                         />
@@ -864,7 +878,7 @@ export default function App() {
                         >
                           <SelectTrigger
                             className="print-select border-slate-200"
-                            style={FIELD_STYLE}
+                            style={{ ...FIELD_STYLE, color: "#1e293b" }}
                             data-ocid={`invoice.unit_label.select.${index + 1}`}
                           >
                             <SelectValue />
