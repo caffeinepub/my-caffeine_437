@@ -22,12 +22,16 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type MedicineType = "ট্যাবলেট" | "সিরাপ" | "ক্যাপসুল" | "ড্রপ";
+type UnitLabel = "টি" | "পিস" | "বক্স" | "প্যাকেট" | "পাতা";
+
+const UNIT_OPTIONS: UnitLabel[] = ["টি", "পিস", "বক্স", "প্যাকেট", "পাতা"];
 
 type InvoiceRow = {
   id: string;
   medicineName: string;
   type: MedicineType;
   quantity: string;
+  unitLabel: UnitLabel;
   units: string;
   unitPrice: string;
   totalPrice: string;
@@ -40,6 +44,13 @@ type Wholesaler = {
 };
 
 const MEDICINE_STORAGE_KEY = "saum_pharmacy_medicines";
+
+// Consistent field style applied to ALL inputs and selects
+const FIELD_STYLE: React.CSSProperties = {
+  height: "40px",
+  fontSize: "14px",
+  padding: "8px 10px",
+};
 
 function getUnitLabel(type: MedicineType): string {
   if (type === "ট্যাবলেট" || type === "ক্যাপসুল") return "mg";
@@ -94,6 +105,7 @@ function createEmptyRow(): InvoiceRow {
     medicineName: "",
     type: "ট্যাবলেট",
     quantity: "",
+    unitLabel: "টি",
     units: "",
     unitPrice: "",
     totalPrice: "",
@@ -101,42 +113,9 @@ function createEmptyRow(): InvoiceRow {
 }
 
 const INITIAL_ROWS: InvoiceRow[] = [
-  {
-    id: crypto.randomUUID(),
-    medicineName: "নাপা এক্সট্রা",
-    type: "ট্যাবলেট",
-    quantity: "500",
-    units: "50",
-    unitPrice: "1.50",
-    totalPrice: calcTotal("1.50", "50"),
-  },
-  {
-    id: crypto.randomUUID(),
-    medicineName: "অ্যামোক্সিসিলিন",
-    type: "ক্যাপসুল",
-    quantity: "250",
-    units: "30",
-    unitPrice: "5.00",
-    totalPrice: calcTotal("5.00", "30"),
-  },
-  {
-    id: crypto.randomUUID(),
-    medicineName: "মেট্রোনিডাজল সিরাপ",
-    type: "সিরাপ",
-    quantity: "200",
-    units: "2",
-    unitPrice: "45.00",
-    totalPrice: calcTotal("45.00", "2"),
-  },
-  {
-    id: crypto.randomUUID(),
-    medicineName: "ওফ্লক্সাসিন ড্রপ",
-    type: "ড্রপ",
-    quantity: "5",
-    units: "1",
-    unitPrice: "80.00",
-    totalPrice: calcTotal("80.00", "1"),
-  },
+  createEmptyRow(),
+  createEmptyRow(),
+  createEmptyRow(),
 ];
 
 function MedicineNameInput({
@@ -231,8 +210,8 @@ function MedicineNameInput({
         onBlur={handleBlur}
         onKeyDown={handleKeyDown}
         placeholder="ঔষধের নাম..."
-        className="print-input w-full border border-border rounded px-2 py-1 text-sm bg-background focus:outline-none focus:ring-1 focus:ring-ring overflow-x-auto"
-        style={{ whiteSpace: "nowrap" }}
+        className="print-input w-full border border-border rounded bg-background focus:outline-none focus:ring-1 focus:ring-ring overflow-x-auto"
+        style={{ ...FIELD_STYLE, whiteSpace: "nowrap" }}
         data-ocid={`invoice.medicine_name.input.${index + 1}`}
         autoComplete="off"
       />
@@ -281,6 +260,7 @@ export default function App() {
     return sum + (Number.isNaN(val) ? 0 : val);
   }, 0);
 
+  // tableFontStyle is only used for non-input elements (td text, th headers)
   const tableFontStyle = useMemo(() => {
     const count = rows.length;
     if (count <= 10) return { fontSize: "14px" };
@@ -307,6 +287,12 @@ export default function App() {
   function updateRowType(id: string, value: MedicineType) {
     setRows((prev) =>
       prev.map((row) => (row.id === id ? { ...row, type: value } : row)),
+    );
+  }
+
+  function updateRowUnitLabel(id: string, value: UnitLabel) {
+    setRows((prev) =>
+      prev.map((row) => (row.id === id ? { ...row, unitLabel: value } : row)),
     );
   }
 
@@ -500,8 +486,8 @@ export default function App() {
                           name: e.target.value,
                         }))
                       }
-                      className="print-input text-sm border-slate-200 focus:border-teal-400 focus:ring-teal-400"
-                      style={{ minWidth: "100%" }}
+                      className="print-input border-slate-200 focus:border-teal-400 focus:ring-teal-400"
+                      style={{ ...FIELD_STYLE, minWidth: "100%" }}
                       data-ocid="wholesaler.name.input"
                     />
                   </div>
@@ -528,8 +514,8 @@ export default function App() {
                           address: e.target.value,
                         }))
                       }
-                      className="print-input text-sm border-slate-200 focus:border-teal-400 focus:ring-teal-400"
-                      style={{ minWidth: "100%" }}
+                      className="print-input border-slate-200 focus:border-teal-400 focus:ring-teal-400"
+                      style={{ ...FIELD_STYLE, minWidth: "100%" }}
                       data-ocid="wholesaler.address.input"
                     />
                   </div>
@@ -556,8 +542,8 @@ export default function App() {
                           mobile: e.target.value,
                         }))
                       }
-                      className="print-input text-sm border-slate-200 focus:border-teal-400 focus:ring-teal-400"
-                      style={{ minWidth: "100%" }}
+                      className="print-input border-slate-200 focus:border-teal-400 focus:ring-teal-400"
+                      style={{ ...FIELD_STYLE, minWidth: "100%" }}
                       data-ocid="wholesaler.mobile.input"
                     />
                   </div>
@@ -731,7 +717,7 @@ export default function App() {
                       ধরন
                     </th>
                     <th
-                      className="px-3 py-3 text-left font-semibold w-28 text-white"
+                      className="px-3 py-3 text-left font-semibold w-40 text-white"
                       style={tableFontStyle}
                     >
                       মাপ
@@ -747,6 +733,12 @@ export default function App() {
                       style={tableFontStyle}
                     >
                       পরিমাণ
+                    </th>
+                    <th
+                      className="px-3 py-3 text-center font-semibold w-24 text-white"
+                      style={tableFontStyle}
+                    >
+                      একক
                     </th>
                     <th
                       className="px-3 py-3 text-right font-semibold w-24 text-white"
@@ -796,8 +788,8 @@ export default function App() {
                           }
                         >
                           <SelectTrigger
-                            className="print-select h-8 border-slate-200"
-                            style={tableFontStyle}
+                            className="print-select border-slate-200"
+                            style={FIELD_STYLE}
                             data-ocid={`invoice.type.select.${index + 1}`}
                           >
                             <SelectValue />
@@ -818,14 +810,20 @@ export default function App() {
                             onChange={(e) =>
                               updateRow(row.id, "quantity", e.target.value)
                             }
-                            placeholder="0"
-                            className="print-input w-full border border-slate-200 rounded px-2 py-1 bg-background focus:outline-none focus:ring-1 focus:ring-blue-400"
-                            style={tableFontStyle}
+                            placeholder=""
+                            className="print-input w-full min-w-[64px] border border-slate-200 rounded bg-background focus:outline-none focus:ring-1 focus:ring-blue-400"
+                            style={FIELD_STYLE}
                             data-ocid={`invoice.quantity.input.${index + 1}`}
                           />
                           <span
-                            className="font-medium text-slate-400 whitespace-nowrap bg-slate-100 px-1.5 py-0.5 rounded"
-                            style={{ fontSize: "10px" }}
+                            className="font-medium text-slate-500 whitespace-nowrap bg-slate-100 px-2 rounded flex items-center self-stretch"
+                            style={{
+                              fontSize: "12px",
+                              minWidth: "32px",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                            }}
                           >
                             {getUnitLabel(row.type)}
                           </span>
@@ -838,9 +836,9 @@ export default function App() {
                           onChange={(e) =>
                             updateRow(row.id, "unitPrice", e.target.value)
                           }
-                          placeholder="-"
-                          className="print-input w-full border border-slate-200 rounded px-2 py-1 bg-background text-right focus:outline-none focus:ring-1 focus:ring-blue-400"
-                          style={tableFontStyle}
+                          placeholder=""
+                          className="print-input w-full border border-slate-200 rounded bg-background text-right focus:outline-none focus:ring-1 focus:ring-blue-400"
+                          style={FIELD_STYLE}
                           data-ocid={`invoice.unit_price.input.${index + 1}`}
                         />
                       </td>
@@ -851,11 +849,34 @@ export default function App() {
                           onChange={(e) =>
                             updateRow(row.id, "units", e.target.value)
                           }
-                          placeholder="0"
-                          className="print-input w-full border border-slate-200 rounded px-2 py-1 bg-background text-right focus:outline-none focus:ring-1 focus:ring-blue-400"
-                          style={tableFontStyle}
+                          placeholder=""
+                          className="print-input w-full border border-slate-200 rounded bg-background text-right focus:outline-none focus:ring-1 focus:ring-blue-400"
+                          style={FIELD_STYLE}
                           data-ocid={`invoice.units.input.${index + 1}`}
                         />
+                      </td>
+                      <td className="px-3 py-2">
+                        <Select
+                          value={row.unitLabel}
+                          onValueChange={(val) =>
+                            updateRowUnitLabel(row.id, val as UnitLabel)
+                          }
+                        >
+                          <SelectTrigger
+                            className="print-select border-slate-200"
+                            style={FIELD_STYLE}
+                            data-ocid={`invoice.unit_label.select.${index + 1}`}
+                          >
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {UNIT_OPTIONS.map((opt) => (
+                              <SelectItem key={opt} value={opt}>
+                                {opt}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </td>
                       <td
                         className="px-3 py-2 text-right font-semibold text-emerald-700"
@@ -881,7 +902,7 @@ export default function App() {
                   {rows.length === 0 && (
                     <tr>
                       <td
-                        colSpan={8}
+                        colSpan={9}
                         className="px-4 py-8 text-center text-slate-400 text-sm"
                         data-ocid="invoice.table.empty_state"
                       >
