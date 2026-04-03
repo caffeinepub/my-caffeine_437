@@ -1,0 +1,161 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --radius: 0.625rem;
+
+    /* Page background: very light cool gray #EEF3F7 → oklch ~0.963 0.012 220 */
+    --background: 0.963 0.012 220;
+    /* Foreground near-black #111827 → oklch ~0.142 0.012 254 */
+    --foreground: 0.142 0.012 254;
+
+    /* Cards: white #FFFFFF */
+    --card: 1 0 0;
+    --card-foreground: 0.142 0.012 254;
+
+    --popover: 1 0 0;
+    --popover-foreground: 0.142 0.012 254;
+
+    /* Primary brand blue #2B6CB0 → oklch ~0.491 0.129 244 */
+    --primary: 0.491 0.129 244;
+    --primary-foreground: 1 0 0;
+
+    /* Secondary: light blue-gray */
+    --secondary: 0.941 0.018 235;
+    --secondary-foreground: 0.491 0.129 244;
+
+    /* Muted: light gray #F6F8FB → oklch ~0.977 0.008 220 */
+    --muted: 0.977 0.008 220;
+    --muted-foreground: 0.481 0.014 237;
+
+    /* Accent: blue tint */
+    --accent: 0.93 0.025 240;
+    --accent-foreground: 0.491 0.129 244;
+
+    /* Destructive: muted red #B91C1C → oklch ~0.444 0.182 25 */
+    --destructive: 0.444 0.182 25;
+    --destructive-foreground: 1 0 0;
+
+    /* Border: light gray #D6DDE6 → oklch ~0.87 0.014 235 */
+    --border: 0.87 0.014 235;
+    --input: 0.87 0.014 235;
+    --ring: 0.491 0.129 244;
+
+    --chart-1: 0.646 0.222 41.116;
+    --chart-2: 0.6 0.118 184.704;
+    --chart-3: 0.398 0.07 227.392;
+    --chart-4: 0.828 0.189 84.429;
+    --chart-5: 0.769 0.188 70.08;
+
+    --sidebar: 0.985 0 0;
+    --sidebar-foreground: 0.145 0 0;
+    --sidebar-primary: 0.491 0.129 244;
+    --sidebar-primary-foreground: 0.985 0 0;
+    --sidebar-accent: 0.97 0 0;
+    --sidebar-accent-foreground: 0.205 0 0;
+    --sidebar-border: 0.922 0 0;
+    --sidebar-ring: 0.708 0 0;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: "Hind Siliguri", "Noto Sans Bengali", sans-serif;
+  }
+
+  input,
+  select,
+  textarea,
+  button {
+    font-family: "Hind Siliguri", "Noto Sans Bengali", sans-serif;
+  }
+}
+
+/* ===== PRINT STYLES ===== */
+@media print {
+  @page {
+    size: A4;
+    margin: 1cm;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+    font-family: "Hind Siliguri", "Noto Sans Bengali", sans-serif;
+    font-size: 12pt;
+  }
+
+  /* Hide interactive elements */
+  .no-print {
+    display: none !important;
+  }
+
+  /* Remove shadows and backgrounds from page wrapper */
+  .print-wrapper {
+    background: white !important;
+    padding: 0 !important;
+  }
+
+  /* Card styling for print */
+  .print-card {
+    box-shadow: none !important;
+    border: 1px solid #ccc !important;
+    border-radius: 4px !important;
+    break-inside: avoid;
+  }
+
+  /* Input fields: hide borders, show as plain text */
+  .print-input {
+    border: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Select fields as plain text */
+  .print-select select,
+  select {
+    border: none !important;
+    background: transparent !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    outline: none !important;
+    padding: 0 !important;
+  }
+
+  /* Table print styles */
+  table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+  }
+
+  th,
+  td {
+    border: 1px solid #aaa !important;
+    padding: 4pt 6pt !important;
+    font-size: 10pt !important;
+  }
+
+  thead th {
+    background-color: #1d4ed8 !important;
+    color: white !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Page breaks */
+  .page-break {
+    page-break-before: always;
+  }
+
+  /* Keep invoice together */
+  .invoice-section {
+    break-inside: avoid;
+  }
+}
