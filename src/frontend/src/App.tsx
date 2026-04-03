@@ -596,16 +596,16 @@ export default function App() {
                           <span>ঠিকানা</span>
                         </div>
                       </td>
-                      <td
-                        className="px-4 py-2.5 text-slate-700 font-medium"
-                        style={{
-                          overflowX: "auto",
-                          whiteSpace: "nowrap",
-                          maxWidth: "160px",
-                          display: "table-cell",
-                        }}
-                      >
-                        বালিগাঁও, লাখাই, হবিগঞ্জ
+                      <td className="px-4 py-2.5 text-slate-700 font-medium">
+                        <div
+                          style={{
+                            overflowX: "auto",
+                            whiteSpace: "nowrap",
+                            maxWidth: "160px",
+                          }}
+                        >
+                          বালিগাঁও, লাখাই, হবিগঞ্জ
+                        </div>
                       </td>
                     </tr>
                     <tr className="pharmacy-info-row-odd">
@@ -615,16 +615,16 @@ export default function App() {
                           <span>মোবাইল</span>
                         </div>
                       </td>
-                      <td
-                        className="px-4 py-2.5 text-slate-700 font-medium font-mono"
-                        style={{
-                          overflowX: "auto",
-                          whiteSpace: "nowrap",
-                          maxWidth: "160px",
-                          display: "table-cell",
-                        }}
-                      >
-                        01648388329
+                      <td className="px-4 py-2.5 text-slate-700 font-medium font-mono">
+                        <div
+                          style={{
+                            overflowX: "auto",
+                            whiteSpace: "nowrap",
+                            maxWidth: "160px",
+                          }}
+                        >
+                          01648388329
+                        </div>
                       </td>
                     </tr>
                     <tr className="pharmacy-info-row-even">
@@ -634,53 +634,53 @@ export default function App() {
                           <span>ইমেইল</span>
                         </div>
                       </td>
-                      <td
-                        className="px-4 py-2.5 font-medium"
-                        style={{
-                          overflowX: "auto",
-                          whiteSpace: "nowrap",
-                          maxWidth: "160px",
-                          display: "table-cell",
-                        }}
-                      >
-                        <a
-                          href="mailto:saumpharmacy@gmail.com"
-                          className="text-blue-600 hover:underline"
+                      <td className="px-4 py-2.5 font-medium">
+                        <div
+                          style={{
+                            overflowX: "auto",
+                            whiteSpace: "nowrap",
+                            maxWidth: "160px",
+                          }}
                         >
-                          saumpharmacy@gmail.com
-                        </a>
+                          <a
+                            href="mailto:saumpharmacy@gmail.com"
+                            className="text-blue-600 hover:underline"
+                          >
+                            saumpharmacy@gmail.com
+                          </a>
+                        </div>
                       </td>
                     </tr>
                     <tr className="pharmacy-info-row-odd">
                       <td className="px-4 py-2.5 font-semibold text-slate-500 w-28 align-middle">
                         তারিখ
                       </td>
-                      <td
-                        className="px-4 py-2.5 text-slate-700 font-medium"
-                        style={{
-                          overflowX: "auto",
-                          whiteSpace: "nowrap",
-                          maxWidth: "160px",
-                          display: "table-cell",
-                        }}
-                      >
-                        {today}
+                      <td className="px-4 py-2.5 text-slate-700 font-medium">
+                        <div
+                          style={{
+                            overflowX: "auto",
+                            whiteSpace: "nowrap",
+                            maxWidth: "160px",
+                          }}
+                        >
+                          {today}
+                        </div>
                       </td>
                     </tr>
                     <tr className="pharmacy-info-row-even">
                       <td className="px-4 py-2.5 font-semibold text-slate-500 w-28 align-middle">
                         ইনভয়েস নং
                       </td>
-                      <td
-                        className="px-4 py-2.5 text-slate-700 font-mono font-semibold text-xs"
-                        style={{
-                          overflowX: "auto",
-                          whiteSpace: "nowrap",
-                          maxWidth: "160px",
-                          display: "table-cell",
-                        }}
-                      >
-                        {invoiceNumber}
+                      <td className="px-4 py-2.5 text-slate-700 font-mono font-semibold text-xs">
+                        <div
+                          style={{
+                            overflowX: "auto",
+                            whiteSpace: "nowrap",
+                            maxWidth: "160px",
+                          }}
+                        >
+                          {invoiceNumber}
+                        </div>
                       </td>
                     </tr>
                   </tbody>
