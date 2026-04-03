@@ -17,6 +17,8 @@ import {
   PlusCircle,
   Printer,
   Trash2,
+  Upload,
+  X,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -62,7 +64,7 @@ const FIELD_STYLE: React.CSSProperties = {
   fontSize: "14px",
   padding: "8px 10px",
   color: "#1e293b",
-  fontWeight: "500",
+  fontWeight: "700",
   backgroundColor: "#ffffff",
 };
 
@@ -224,8 +226,16 @@ function MedicineNameInput({
         onBlur={handleBlur}
         onKeyDown={handleKeyDown}
         placeholder="ঔষধের নাম..."
-        className="print-input w-full border border-border rounded focus:outline-none focus:ring-1 focus:ring-ring overflow-x-auto"
-        style={{ ...FIELD_STYLE, whiteSpace: "nowrap" }}
+        className="print-input w-full border border-border rounded focus:outline-none focus:ring-1 focus:ring-ring"
+        style={{
+          ...FIELD_STYLE,
+          whiteSpace: "normal",
+          wordBreak: "break-word",
+          height: "auto",
+          minHeight: "40px",
+          width: "100%",
+          minWidth: "160px",
+        }}
         data-ocid={`invoice.medicine_name.input.${index + 1}`}
         autoComplete="off"
       />
@@ -262,6 +272,8 @@ export default function App() {
   const [rows, setRows] = useState<InvoiceRow[]>(INITIAL_ROWS);
   const [invoiceNumber] = useState<string>(() => generateInvoiceNumber());
   const [isPdfLoading, setIsPdfLoading] = useState(false);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
 
   const today = new Date().toLocaleDateString("bn-BD", {
     year: "numeric",
@@ -274,7 +286,6 @@ export default function App() {
     return sum + (Number.isNaN(val) ? 0 : val);
   }, 0);
 
-  // tableFontStyle is only used for non-input elements (td text, th headers)
   const tableFontStyle = useMemo(() => {
     const count = rows.length;
     if (count <= 10) return { fontSize: "14px" };
@@ -282,6 +293,21 @@ export default function App() {
     if (count <= 22) return { fontSize: "10px" };
     return { fontSize: "8px" };
   }, [rows.length]);
+
+  function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setLogoUrl(ev.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function removeLogo() {
+    setLogoUrl(null);
+    if (logoInputRef.current) logoInputRef.current.value = "";
+  }
 
   function updateRow(id: string, field: keyof InvoiceRow, value: string) {
     setRows((prev) =>
@@ -332,7 +358,6 @@ export default function App() {
       const invoiceEl = document.getElementById("invoice-content");
       if (!invoiceEl) return;
 
-      // Temporarily hide no-print elements inside invoice content during capture
       const noPrintEls = Array.from(invoiceEl.querySelectorAll(".no-print"));
       const originalDisplays: string[] = [];
       for (const el of noPrintEls) {
@@ -349,12 +374,10 @@ export default function App() {
         logging: false,
       });
 
-      // Restore hidden elements
       for (let i = 0; i < noPrintEls.length; i++) {
         (noPrintEls[i] as HTMLElement).style.display = originalDisplays[i];
       }
 
-      // Convert canvas to PNG blob and trigger download
       canvas.toBlob(
         (blob) => {
           if (!blob) return;
@@ -387,9 +410,17 @@ export default function App() {
       <div className="invoice-header-banner no-print">
         <div className="max-w-5xl mx-auto px-6 py-5 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="pharmacy-logo-icon">
-              <span className="text-2xl">⚕</span>
-            </div>
+            {logoUrl ? (
+              <img
+                src={logoUrl}
+                alt="Saum Pharmacy Logo"
+                className="w-12 h-12 object-contain rounded-full bg-white/10 p-0.5"
+              />
+            ) : (
+              <div className="pharmacy-logo-icon">
+                <span className="text-2xl">⚕</span>
+              </div>
+            )}
             <div>
               <h1 className="text-2xl font-bold text-white tracking-wide">
                 Saum Pharmacy
@@ -399,11 +430,46 @@ export default function App() {
               </p>
             </div>
           </div>
-          <div className="text-right">
-            <p className="text-blue-100 text-sm">{today}</p>
-            <span className="inline-block mt-1 bg-white/20 text-white text-xs font-mono px-3 py-1 rounded-full border border-white/30">
-              {invoiceNumber}
-            </span>
+          <div className="flex items-center gap-4">
+            {/* Logo upload button */}
+            <div className="flex flex-col items-end gap-1">
+              <input
+                ref={logoInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleLogoUpload}
+                className="hidden"
+                id="logo-upload-input"
+              />
+              <div className="flex items-center gap-2">
+                <label
+                  htmlFor="logo-upload-input"
+                  className="cursor-pointer flex items-center gap-1.5 bg-white/20 hover:bg-white/30 text-white text-xs font-medium px-3 py-1.5 rounded-full border border-white/30 transition-colors"
+                >
+                  <Upload className="h-3.5 w-3.5" />
+                  লোগো আপলোড
+                </label>
+                {logoUrl && (
+                  <button
+                    type="button"
+                    onClick={removeLogo}
+                    className="text-white/70 hover:text-white bg-white/10 hover:bg-white/20 rounded-full p-1 transition-colors"
+                    title="লোগো সরান"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
+              {logoUrl && (
+                <span className="text-blue-200 text-xs">লোগো সেট হয়েছে ✓</span>
+              )}
+            </div>
+            <div className="text-right">
+              <p className="text-blue-100 text-sm">{today}</p>
+              <span className="inline-block mt-1 bg-white/20 text-white text-xs font-mono px-3 py-1 rounded-full border border-white/30">
+                {invoiceNumber}
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -440,9 +506,17 @@ export default function App() {
           <div className="invoice-inner-header">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-xl">
-                  ⚕
-                </div>
+                {logoUrl ? (
+                  <img
+                    src={logoUrl}
+                    alt="Saum Pharmacy Logo"
+                    className="w-10 h-10 object-contain rounded-full bg-white/20 p-0.5"
+                  />
+                ) : (
+                  <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-xl">
+                    ⚕
+                  </div>
+                )}
                 <div>
                   <h2 className="text-xl font-bold text-white">
                     Saum Pharmacy
@@ -485,26 +559,21 @@ export default function App() {
                   >
                     হোলসেলার/পাইকারের নাম
                   </Label>
-                  <div
-                    className="overflow-x-auto"
-                    style={{ whiteSpace: "nowrap" }}
-                  >
-                    <Input
-                      id="wholesaler-name"
-                      type="text"
-                      placeholder="নাম লিখুন..."
-                      value={wholesaler.name}
-                      onChange={(e) =>
-                        setWholesaler((prev) => ({
-                          ...prev,
-                          name: e.target.value,
-                        }))
-                      }
-                      className="print-input border-slate-200 focus:border-teal-400 focus:ring-teal-400"
-                      style={{ ...FIELD_STYLE, minWidth: "100%" }}
-                      data-ocid="wholesaler.name.input"
-                    />
-                  </div>
+                  <Input
+                    id="wholesaler-name"
+                    type="text"
+                    placeholder="নাম লিখুন..."
+                    value={wholesaler.name}
+                    onChange={(e) =>
+                      setWholesaler((prev) => ({
+                        ...prev,
+                        name: e.target.value,
+                      }))
+                    }
+                    className="print-input border-slate-200 focus:border-teal-400 focus:ring-teal-400 w-full"
+                    style={FIELD_STYLE}
+                    data-ocid="wholesaler.name.input"
+                  />
                 </div>
                 <div>
                   <Label
@@ -513,26 +582,21 @@ export default function App() {
                   >
                     ঠিকানা
                   </Label>
-                  <div
-                    className="overflow-x-auto"
-                    style={{ whiteSpace: "nowrap" }}
-                  >
-                    <Input
-                      id="wholesaler-address"
-                      type="text"
-                      placeholder="ঠিকানা লিখুন..."
-                      value={wholesaler.address}
-                      onChange={(e) =>
-                        setWholesaler((prev) => ({
-                          ...prev,
-                          address: e.target.value,
-                        }))
-                      }
-                      className="print-input border-slate-200 focus:border-teal-400 focus:ring-teal-400"
-                      style={{ ...FIELD_STYLE, minWidth: "100%" }}
-                      data-ocid="wholesaler.address.input"
-                    />
-                  </div>
+                  <Input
+                    id="wholesaler-address"
+                    type="text"
+                    placeholder="ঠিকানা লিখুন..."
+                    value={wholesaler.address}
+                    onChange={(e) =>
+                      setWholesaler((prev) => ({
+                        ...prev,
+                        address: e.target.value,
+                      }))
+                    }
+                    className="print-input border-slate-200 focus:border-teal-400 focus:ring-teal-400 w-full"
+                    style={FIELD_STYLE}
+                    data-ocid="wholesaler.address.input"
+                  />
                 </div>
                 <div>
                   <Label
@@ -541,26 +605,21 @@ export default function App() {
                   >
                     মোবাইল নম্বর
                   </Label>
-                  <div
-                    className="overflow-x-auto"
-                    style={{ whiteSpace: "nowrap" }}
-                  >
-                    <Input
-                      id="wholesaler-mobile"
-                      type="tel"
-                      placeholder="মোবাইল নম্বর লিখুন..."
-                      value={wholesaler.mobile}
-                      onChange={(e) =>
-                        setWholesaler((prev) => ({
-                          ...prev,
-                          mobile: e.target.value,
-                        }))
-                      }
-                      className="print-input border-slate-200 focus:border-teal-400 focus:ring-teal-400"
-                      style={{ ...FIELD_STYLE, minWidth: "100%" }}
-                      data-ocid="wholesaler.mobile.input"
-                    />
-                  </div>
+                  <Input
+                    id="wholesaler-mobile"
+                    type="tel"
+                    placeholder="মোবাইল নম্বর লিখুন..."
+                    value={wholesaler.mobile}
+                    onChange={(e) =>
+                      setWholesaler((prev) => ({
+                        ...prev,
+                        mobile: e.target.value,
+                      }))
+                    }
+                    className="print-input border-slate-200 focus:border-teal-400 focus:ring-teal-400 w-full"
+                    style={FIELD_STYLE}
+                    data-ocid="wholesaler.mobile.input"
+                  />
                 </div>
               </div>
             </div>
@@ -572,15 +631,26 @@ export default function App() {
             >
               <div className="pharmacy-card-header px-5 py-3">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="text-lg font-bold text-white">
-                      Saum Pharmacy
-                    </h2>
-                    <p className="text-blue-100 text-xs">সাওম ফার্মেসি</p>
+                  <div className="flex items-center gap-3">
+                    {logoUrl && (
+                      <img
+                        src={logoUrl}
+                        alt="Logo"
+                        className="w-9 h-9 object-contain rounded-full bg-white/20 p-0.5"
+                      />
+                    )}
+                    <div>
+                      <h2 className="text-lg font-bold text-white">
+                        Saum Pharmacy
+                      </h2>
+                      <p className="text-blue-100 text-xs">সাওম ফার্মেসি</p>
+                    </div>
                   </div>
-                  <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                    <span className="text-white text-lg">⚕</span>
-                  </div>
+                  {!logoUrl && (
+                    <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                      <span className="text-white text-lg">⚕</span>
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="bg-white">
@@ -590,22 +660,21 @@ export default function App() {
                 >
                   <tbody>
                     <tr className="pharmacy-info-row-even">
-                      <td className="px-4 py-2.5 font-semibold text-slate-500 w-28 align-middle">
-                        <div className="flex items-center gap-1.5">
+                      <td className="px-4 py-2.5 font-semibold text-slate-500 w-28 align-top">
+                        <div className="flex items-center gap-1.5 pt-0.5">
                           <MapPin className="h-3.5 w-3.5 text-blue-400 flex-shrink-0" />
                           <span>ঠিকানা</span>
                         </div>
                       </td>
                       <td className="px-4 py-2.5 text-slate-700 font-medium">
-                        <div
+                        <span
                           style={{
-                            overflowX: "auto",
-                            whiteSpace: "nowrap",
-                            maxWidth: "160px",
+                            wordBreak: "break-word",
+                            whiteSpace: "normal",
                           }}
                         >
                           বালিগাঁও, লাখাই, হবিগঞ্জ
-                        </div>
+                        </span>
                       </td>
                     </tr>
                     <tr className="pharmacy-info-row-odd">
@@ -616,15 +685,14 @@ export default function App() {
                         </div>
                       </td>
                       <td className="px-4 py-2.5 text-slate-700 font-medium font-mono">
-                        <div
+                        <span
                           style={{
-                            overflowX: "auto",
-                            whiteSpace: "nowrap",
-                            maxWidth: "160px",
+                            wordBreak: "break-all",
+                            whiteSpace: "normal",
                           }}
                         >
                           01648388329
-                        </div>
+                        </span>
                       </td>
                     </tr>
                     <tr className="pharmacy-info-row-even">
@@ -635,20 +703,16 @@ export default function App() {
                         </div>
                       </td>
                       <td className="px-4 py-2.5 font-medium">
-                        <div
+                        <a
+                          href="mailto:saumpharmacy@gmail.com"
+                          className="text-blue-600 hover:underline break-all"
                           style={{
-                            overflowX: "auto",
-                            whiteSpace: "nowrap",
-                            maxWidth: "160px",
+                            wordBreak: "break-all",
+                            whiteSpace: "normal",
                           }}
                         >
-                          <a
-                            href="mailto:saumpharmacy@gmail.com"
-                            className="text-blue-600 hover:underline"
-                          >
-                            saumpharmacy@gmail.com
-                          </a>
-                        </div>
+                          saumpharmacy@gmail.com
+                        </a>
                       </td>
                     </tr>
                     <tr className="pharmacy-info-row-odd">
@@ -656,15 +720,14 @@ export default function App() {
                         তারিখ
                       </td>
                       <td className="px-4 py-2.5 text-slate-700 font-medium">
-                        <div
+                        <span
                           style={{
-                            overflowX: "auto",
-                            whiteSpace: "nowrap",
-                            maxWidth: "160px",
+                            wordBreak: "break-word",
+                            whiteSpace: "normal",
                           }}
                         >
                           {today}
-                        </div>
+                        </span>
                       </td>
                     </tr>
                     <tr className="pharmacy-info-row-even">
@@ -672,15 +735,14 @@ export default function App() {
                         ইনভয়েস নং
                       </td>
                       <td className="px-4 py-2.5 text-slate-700 font-mono font-semibold text-xs">
-                        <div
+                        <span
                           style={{
-                            overflowX: "auto",
-                            whiteSpace: "nowrap",
-                            maxWidth: "160px",
+                            wordBreak: "break-all",
+                            whiteSpace: "normal",
                           }}
                         >
                           {invoiceNumber}
-                        </div>
+                        </span>
                       </td>
                     </tr>
                   </tbody>
@@ -707,16 +769,27 @@ export default function App() {
             <div className="overflow-x-auto bg-white">
               <table
                 className="w-full"
-                style={tableFontStyle}
+                style={{ ...tableFontStyle, tableLayout: "fixed" }}
                 data-ocid="invoice.table"
               >
+                <colgroup>
+                  <col style={{ width: "36px" }} />
+                  <col style={{ width: "auto" }} />
+                  <col style={{ width: "100px" }} />
+                  <col style={{ width: "130px" }} />
+                  <col style={{ width: "90px" }} />
+                  <col style={{ width: "90px" }} />
+                  <col style={{ width: "90px" }} />
+                  <col style={{ width: "90px" }} />
+                  <col style={{ width: "40px" }} className="no-print" />
+                </colgroup>
                 <thead>
                   <tr className="invoice-table-thead">
                     <th
-                      className="px-3 py-3 text-center font-semibold w-10 text-white"
+                      className="px-2 py-3 text-center font-semibold text-white"
                       style={tableFontStyle}
                     >
-                      ক্রমিক
+                      ক্রম
                     </th>
                     <th
                       className="px-3 py-3 text-left font-semibold text-white"
@@ -725,43 +798,43 @@ export default function App() {
                       ঔষধের নাম
                     </th>
                     <th
-                      className="px-3 py-3 text-left font-semibold w-28 text-white"
+                      className="px-2 py-3 text-left font-semibold text-white"
                       style={tableFontStyle}
                     >
                       ধরন
                     </th>
                     <th
-                      className="px-3 py-3 text-left font-semibold w-40 text-white"
+                      className="px-2 py-3 text-left font-semibold text-white"
                       style={tableFontStyle}
                     >
                       মাপ
                     </th>
                     <th
-                      className="px-3 py-3 text-right font-semibold w-24 text-white"
+                      className="px-2 py-3 text-right font-semibold text-white"
                       style={tableFontStyle}
                     >
-                      দর (টাকা)
+                      দর (৳)
                     </th>
                     <th
-                      className="px-3 py-3 text-right font-semibold w-24 text-white"
+                      className="px-2 py-3 text-right font-semibold text-white"
                       style={tableFontStyle}
                     >
                       পরিমাণ
                     </th>
                     <th
-                      className="px-3 py-3 text-center font-semibold w-24 text-white"
+                      className="px-2 py-3 text-center font-semibold text-white"
                       style={tableFontStyle}
                     >
                       একক
                     </th>
                     <th
-                      className="px-3 py-3 text-right font-semibold w-24 text-white"
+                      className="px-2 py-3 text-right font-semibold text-white"
                       style={tableFontStyle}
                     >
-                      দাম (টাকা)
+                      দাম (৳)
                     </th>
                     <th
-                      className="px-3 py-3 text-center font-semibold w-10 no-print text-white"
+                      className="px-2 py-3 text-center font-semibold no-print text-white"
                       style={tableFontStyle}
                     >
                       মুছুন
@@ -778,7 +851,7 @@ export default function App() {
                       data-ocid={`invoice.item.${index + 1}`}
                     >
                       <td
-                        className="px-3 py-2 text-center font-semibold text-slate-400"
+                        className="px-2 py-2 text-center font-semibold text-slate-400"
                         style={tableFontStyle}
                       >
                         {index + 1}
@@ -794,7 +867,7 @@ export default function App() {
                           onBlur={handleMedicineBlur}
                         />
                       </td>
-                      <td className="px-3 py-2">
+                      <td className="px-2 py-2">
                         <Select
                           value={row.type}
                           onValueChange={(val) =>
@@ -803,7 +876,11 @@ export default function App() {
                         >
                           <SelectTrigger
                             className="print-select border-slate-200"
-                            style={{ ...FIELD_STYLE, color: "#1e293b" }}
+                            style={{
+                              ...FIELD_STYLE,
+                              color: "#1e293b",
+                              width: "100%",
+                            }}
                             data-ocid={`invoice.type.select.${index + 1}`}
                           >
                             <SelectValue />
@@ -816,7 +893,7 @@ export default function App() {
                           </SelectContent>
                         </Select>
                       </td>
-                      <td className="px-3 py-2">
+                      <td className="px-2 py-2">
                         <div className="flex items-center gap-1">
                           <input
                             type="number"
@@ -825,15 +902,15 @@ export default function App() {
                               updateRow(row.id, "quantity", e.target.value)
                             }
                             placeholder=""
-                            className="print-input w-full min-w-[64px] border border-slate-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-400"
-                            style={FIELD_STYLE}
+                            className="print-input w-full border border-slate-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-400"
+                            style={{ ...FIELD_STYLE, minWidth: "50px" }}
                             data-ocid={`invoice.quantity.input.${index + 1}`}
                           />
                           <span
-                            className="font-medium text-slate-500 whitespace-nowrap bg-slate-100 px-2 rounded flex items-center self-stretch"
+                            className="font-medium text-slate-500 whitespace-nowrap bg-slate-100 px-1.5 rounded flex items-center self-stretch"
                             style={{
-                              fontSize: "12px",
-                              minWidth: "32px",
+                              fontSize: "11px",
+                              minWidth: "28px",
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
@@ -843,7 +920,7 @@ export default function App() {
                           </span>
                         </div>
                       </td>
-                      <td className="px-3 py-2">
+                      <td className="px-2 py-2">
                         <input
                           type="number"
                           value={row.unitPrice}
@@ -856,7 +933,7 @@ export default function App() {
                           data-ocid={`invoice.unit_price.input.${index + 1}`}
                         />
                       </td>
-                      <td className="px-3 py-2">
+                      <td className="px-2 py-2">
                         <input
                           type="number"
                           value={row.units}
@@ -869,7 +946,7 @@ export default function App() {
                           data-ocid={`invoice.units.input.${index + 1}`}
                         />
                       </td>
-                      <td className="px-3 py-2">
+                      <td className="px-2 py-2">
                         <Select
                           value={row.unitLabel}
                           onValueChange={(val) =>
@@ -878,7 +955,11 @@ export default function App() {
                         >
                           <SelectTrigger
                             className="print-select border-slate-200"
-                            style={{ ...FIELD_STYLE, color: "#1e293b" }}
+                            style={{
+                              ...FIELD_STYLE,
+                              color: "#1e293b",
+                              width: "100%",
+                            }}
                             data-ocid={`invoice.unit_label.select.${index + 1}`}
                           >
                             <SelectValue />
@@ -893,13 +974,13 @@ export default function App() {
                         </Select>
                       </td>
                       <td
-                        className="px-3 py-2 text-right font-semibold text-emerald-700"
+                        className="px-2 py-2 text-right font-semibold text-emerald-700"
                         style={tableFontStyle}
                         data-ocid={`invoice.total_price.input.${index + 1}`}
                       >
                         {row.totalPrice ? `৳${row.totalPrice}` : "-"}
                       </td>
-                      <td className="px-3 py-2 text-center no-print">
+                      <td className="px-2 py-2 text-center no-print">
                         <button
                           type="button"
                           onClick={() => deleteRow(row.id)}
@@ -998,7 +1079,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* Official Seal */}
+            {/* Official Seal - shows logo if uploaded */}
             <div className="signature-seal-box rounded-xl border-2 border-dashed border-slate-300 bg-white overflow-hidden">
               <div className="px-4 py-2 bg-gradient-to-r from-purple-50 to-pink-50 border-b border-slate-200">
                 <p className="text-xs font-semibold text-slate-600 text-center uppercase tracking-wide">
@@ -1009,11 +1090,19 @@ export default function App() {
                 className="px-4 py-6 flex flex-col items-center justify-center"
                 style={{ minHeight: "80px" }}
               >
-                <div className="w-20 h-20 rounded-full border-4 border-dashed border-slate-300 flex items-center justify-center">
-                  <p className="text-xs text-slate-300 text-center leading-tight">
-                    সিল
-                  </p>
-                </div>
+                {logoUrl ? (
+                  <img
+                    src={logoUrl}
+                    alt="Official Seal"
+                    className="w-20 h-20 object-contain"
+                  />
+                ) : (
+                  <div className="w-20 h-20 rounded-full border-4 border-dashed border-slate-300 flex items-center justify-center">
+                    <p className="text-xs text-slate-300 text-center leading-tight">
+                      সিল
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
