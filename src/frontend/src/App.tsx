@@ -943,6 +943,67 @@ export default function App() {
             </div>
           </div>
 
+          {/* Signature and Seal Section */}
+          <div
+            className="mx-5 mb-5 grid gap-5"
+            style={{ gridTemplateColumns: "1fr 1fr 1fr" }}
+          >
+            {/* Receiver Signature */}
+            <div className="signature-seal-box rounded-xl border-2 border-dashed border-slate-300 bg-white overflow-hidden">
+              <div className="px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-slate-200">
+                <p className="text-xs font-semibold text-slate-600 text-center uppercase tracking-wide">
+                  গ্রহীতার স্বাক্ষর
+                </p>
+              </div>
+              <div
+                className="px-4 py-6 flex flex-col items-center justify-end"
+                style={{ minHeight: "80px" }}
+              >
+                <div className="w-full border-t-2 border-slate-400 mt-4" />
+                <p className="text-xs text-slate-400 mt-1 text-center">
+                  স্বাক্ষর ও তারিখ
+                </p>
+              </div>
+            </div>
+
+            {/* Authorized Signature */}
+            <div className="signature-seal-box rounded-xl border-2 border-dashed border-slate-300 bg-white overflow-hidden">
+              <div className="px-4 py-2 bg-gradient-to-r from-teal-50 to-cyan-50 border-b border-slate-200">
+                <p className="text-xs font-semibold text-slate-600 text-center uppercase tracking-wide">
+                  অনুমোদিত স্বাক্ষর
+                </p>
+              </div>
+              <div
+                className="px-4 py-6 flex flex-col items-center justify-end"
+                style={{ minHeight: "80px" }}
+              >
+                <div className="w-full border-t-2 border-slate-400 mt-4" />
+                <p className="text-xs text-slate-400 mt-1 text-center">
+                  Saum Pharmacy
+                </p>
+              </div>
+            </div>
+
+            {/* Official Seal */}
+            <div className="signature-seal-box rounded-xl border-2 border-dashed border-slate-300 bg-white overflow-hidden">
+              <div className="px-4 py-2 bg-gradient-to-r from-purple-50 to-pink-50 border-b border-slate-200">
+                <p className="text-xs font-semibold text-slate-600 text-center uppercase tracking-wide">
+                  অফিসিয়াল সিল
+                </p>
+              </div>
+              <div
+                className="px-4 py-6 flex flex-col items-center justify-center"
+                style={{ minHeight: "80px" }}
+              >
+                <div className="w-20 h-20 rounded-full border-4 border-dashed border-slate-300 flex items-center justify-center">
+                  <p className="text-xs text-slate-300 text-center leading-tight">
+                    সিল
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Invoice footer inside content */}
           <div className="invoice-footer-bar mx-5 mb-5 rounded-lg px-5 py-3">
             <p className="text-center text-xs text-blue-200">
