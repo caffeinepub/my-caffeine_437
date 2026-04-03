@@ -8,9 +8,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
-import { Download, Loader2, PlusCircle, Printer, Trash2 } from "lucide-react";
+import html2canvas from "html2canvas";
+import {
+  Download,
+  Loader2,
+  Mail,
+  MapPin,
+  Phone,
+  PlusCircle,
+  Printer,
+  Trash2,
+} from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type MedicineType = "ট্যাবলেট" | "সিরাপ" | "ক্যাপসুল" | "ড্রপ";
@@ -223,7 +231,8 @@ function MedicineNameInput({
         onBlur={handleBlur}
         onKeyDown={handleKeyDown}
         placeholder="ঔষধের নাম..."
-        className="print-input w-full border border-border rounded px-2 py-1 text-sm bg-background focus:outline-none focus:ring-1 focus:ring-ring"
+        className="print-input w-full border border-border rounded px-2 py-1 text-sm bg-background focus:outline-none focus:ring-1 focus:ring-ring overflow-x-auto"
+        style={{ whiteSpace: "nowrap" }}
         data-ocid={`invoice.medicine_name.input.${index + 1}`}
         autoComplete="off"
       />
@@ -265,12 +274,6 @@ export default function App() {
     year: "numeric",
     month: "long",
     day: "numeric",
-  });
-
-  const todayForPdf = new Date().toLocaleDateString("en-GB", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
   });
 
   const grandTotal = rows.reduce((sum, row) => {
@@ -326,195 +329,50 @@ export default function App() {
   async function handlePdfDownload() {
     setIsPdfLoading(true);
     try {
-      const pdf = new jsPDF({
-        orientation: "portrait",
-        unit: "mm",
-        format: "a4",
+      const invoiceEl = document.getElementById("invoice-content");
+      if (!invoiceEl) return;
+
+      // Temporarily hide no-print elements inside invoice content during capture
+      const noPrintEls = Array.from(invoiceEl.querySelectorAll(".no-print"));
+      const originalDisplays: string[] = [];
+      for (const el of noPrintEls) {
+        const htmlEl = el as HTMLElement;
+        originalDisplays.push(htmlEl.style.display);
+        htmlEl.style.display = "none";
+      }
+
+      const canvas = await html2canvas(invoiceEl, {
+        scale: 3,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: "#ffffff",
+        logging: false,
       });
 
-      const pageWidth = 210;
-      const margin = 14;
-      const contentWidth = pageWidth - margin * 2;
+      // Restore hidden elements
+      for (let i = 0; i < noPrintEls.length; i++) {
+        (noPrintEls[i] as HTMLElement).style.display = originalDisplays[i];
+      }
 
-      const headerY = 14;
-      const colWidth = contentWidth / 2 - 3;
-      const leftX = margin;
-      const rightX = margin + colWidth + 6;
-
-      // Left column - Wholesaler info box
-      pdf.setDrawColor(180, 180, 180);
-      pdf.setFillColor(248, 249, 250);
-      pdf.roundedRect(leftX, headerY, colWidth, 42, 2, 2, "FD");
-
-      pdf.setFont("helvetica", "bold");
-      pdf.setFontSize(10);
-      pdf.setTextColor(60, 60, 60);
-      pdf.text("Wholesaler Info", leftX + 4, headerY + 7);
-
-      pdf.setLineWidth(0.3);
-      pdf.setDrawColor(200, 200, 200);
-      pdf.line(leftX + 4, headerY + 9, leftX + colWidth - 4, headerY + 9);
-
-      pdf.setFont("helvetica", "normal");
-      pdf.setFontSize(9);
-      pdf.setTextColor(80, 80, 80);
-      pdf.text("Name:", leftX + 4, headerY + 15);
-      pdf.setFont("helvetica", "bold");
-      pdf.setTextColor(30, 30, 30);
-      pdf.text(wholesaler.name || "-", leftX + 22, headerY + 15);
-
-      pdf.setFont("helvetica", "normal");
-      pdf.setTextColor(80, 80, 80);
-      pdf.text("Address:", leftX + 4, headerY + 22);
-      pdf.setFont("helvetica", "bold");
-      pdf.setTextColor(30, 30, 30);
-      const addressText = wholesaler.address || "-";
-      const addressLines = pdf.splitTextToSize(addressText, colWidth - 30);
-      pdf.text(addressLines, leftX + 26, headerY + 22);
-
-      pdf.setFont("helvetica", "normal");
-      pdf.setTextColor(80, 80, 80);
-      pdf.text("Mobile:", leftX + 4, headerY + 31);
-      pdf.setFont("helvetica", "bold");
-      pdf.setTextColor(30, 30, 30);
-      pdf.text(wholesaler.mobile || "-", leftX + 22, headerY + 31);
-
-      // Right column - Saum Pharmacy info box (taller to fit email)
-      pdf.setDrawColor(30, 100, 180);
-      pdf.setFillColor(30, 100, 180);
-      pdf.roundedRect(rightX, headerY, colWidth, 12, 2, 2, "F");
-
-      pdf.setFont("helvetica", "bold");
-      pdf.setFontSize(13);
-      pdf.setTextColor(255, 255, 255);
-      pdf.text("Saum Pharmacy", rightX + 4, headerY + 8);
-
-      pdf.setDrawColor(180, 180, 180);
-      pdf.setFillColor(248, 249, 250);
-      pdf.roundedRect(rightX, headerY + 12, colWidth, 38, 0, 0, "FD");
-      pdf.roundedRect(rightX, headerY + 12, colWidth, 38, 2, 2, "D");
-
-      const labelX = rightX + 4;
-      const valueX = rightX + 26;
-      pdf.setFontSize(9);
-
-      pdf.setFont("helvetica", "normal");
-      pdf.setTextColor(80, 80, 80);
-      pdf.text("Address:", labelX, headerY + 19);
-      pdf.setFont("helvetica", "bold");
-      pdf.setTextColor(30, 30, 30);
-      pdf.text("Baligaw, Lakhai, Habiganj", valueX, headerY + 19);
-
-      pdf.setFont("helvetica", "normal");
-      pdf.setTextColor(80, 80, 80);
-      pdf.text("Mobile:", labelX, headerY + 26);
-      pdf.setFont("helvetica", "bold");
-      pdf.setTextColor(30, 30, 30);
-      pdf.text("01648388329", valueX, headerY + 26);
-
-      pdf.setFont("helvetica", "normal");
-      pdf.setTextColor(80, 80, 80);
-      pdf.text("Email:", labelX, headerY + 33);
-      pdf.setFont("helvetica", "bold");
-      pdf.setTextColor(30, 30, 30);
-      pdf.text("saumpharmacy@gmail.com", valueX, headerY + 33);
-
-      pdf.setFont("helvetica", "normal");
-      pdf.setTextColor(80, 80, 80);
-      pdf.text("Date:", labelX, headerY + 40);
-      pdf.setFont("helvetica", "bold");
-      pdf.setTextColor(30, 30, 30);
-      pdf.text(todayForPdf, valueX, headerY + 40);
-
-      pdf.setFont("helvetica", "normal");
-      pdf.setTextColor(80, 80, 80);
-      pdf.text("Invoice:", labelX, headerY + 47);
-      pdf.setFont("helvetica", "bold");
-      pdf.setTextColor(30, 30, 30);
-      pdf.text(invoiceNumber, valueX, headerY + 47);
-
-      // ===== MEDICINE TABLE =====
-      const tableStartY = headerY + 58;
-
-      const tableRows = rows.map((row, i) => [
-        String(i + 1),
-        row.medicineName || "-",
-        row.type,
-        row.quantity ? `${row.quantity} ${getUnitLabel(row.type)}` : "-",
-        row.unitPrice ? `${row.unitPrice}` : "-",
-        row.units || "-",
-        row.totalPrice ? `${row.totalPrice}` : "-",
-      ]);
-
-      autoTable(pdf, {
-        startY: tableStartY,
-        head: [
-          [
-            "#",
-            "Medicine Name",
-            "Type",
-            "Size",
-            "Unit Price (Tk)",
-            "Qty",
-            "Total (Tk)",
-          ],
-        ],
-        body: tableRows,
-        margin: { left: margin, right: margin },
-        styles: {
-          font: "helvetica",
-          fontSize: 9,
-          cellPadding: 3,
-          lineColor: [200, 200, 200],
-          lineWidth: 0.3,
+      // Convert canvas to PNG blob and trigger download
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) return;
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = `saum-pharmacy-invoice-${invoiceNumber}.png`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
         },
-        headStyles: {
-          fillColor: [30, 100, 180],
-          textColor: 255,
-          fontStyle: "bold",
-          fontSize: 9,
-        },
-        alternateRowStyles: { fillColor: [245, 248, 255] },
-        columnStyles: {
-          0: { halign: "center", cellWidth: 10 },
-          1: { cellWidth: 50 },
-          2: { cellWidth: 22 },
-          3: { cellWidth: 20 },
-          4: { halign: "right", cellWidth: 28 },
-          5: { halign: "right", cellWidth: 18 },
-          6: { halign: "right", cellWidth: 28 },
-        },
-      });
-
-      // ===== GRAND TOTAL =====
-      const finalY =
-        (pdf as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable
-          .finalY + 6;
-      pdf.setFont("helvetica", "bold");
-      pdf.setFontSize(11);
-      pdf.setTextColor(30, 30, 30);
-      pdf.text(
-        `Grand Total: Tk ${grandTotal.toFixed(2)}`,
-        pageWidth - margin,
-        finalY,
-        { align: "right" },
+        "image/png",
+        1.0,
       );
-
-      // ===== FOOTER =====
-      pdf.setFont("helvetica", "normal");
-      pdf.setFontSize(8);
-      pdf.setTextColor(150, 150, 150);
-      pdf.text(
-        "Saum Pharmacy - Baligaw, Lakhai, Habiganj | 01648388329 | saumpharmacy@gmail.com",
-        pageWidth / 2,
-        285,
-        { align: "center" },
-      );
-
-      pdf.save(`saum-pharmacy-invoice-${invoiceNumber}.pdf`);
     } catch (err) {
       console.error("PDF generation failed:", err);
-      alert("PDF তৈরিতে সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।");
+      alert("ডাউনলোডে সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।");
     } finally {
       setIsPdfLoading(false);
     }
@@ -525,188 +383,303 @@ export default function App() {
       className="min-h-screen print-wrapper"
       style={{ background: "oklch(0.963 0.012 220)" }}
     >
-      <div className="max-w-5xl mx-auto px-6 py-8">
-        {/* Page Title */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">
-              Saum Pharmacy - ইনভয়েস
-            </h1>
-            <div className="flex items-center gap-3 mt-1">
-              <p className="text-sm text-muted-foreground">{today}</p>
-              <span className="text-xs font-mono text-muted-foreground bg-muted px-2 py-0.5 rounded">
-                {invoiceNumber}
-              </span>
+      {/* Premium Header Banner */}
+      <div className="invoice-header-banner no-print">
+        <div className="max-w-5xl mx-auto px-6 py-5 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="pharmacy-logo-icon">
+              <span className="text-2xl">⚕</span>
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-white tracking-wide">
+                Saum Pharmacy
+              </h1>
+              <p className="text-blue-100 text-sm font-medium">
+                ইনভয়েস ম্যানেজমেন্ট সিস্টেম
+              </p>
             </div>
           </div>
-          <div className="flex gap-2 no-print">
-            <Button
-              onClick={handlePdfDownload}
-              variant="outline"
-              className="gap-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground"
-              disabled={isPdfLoading}
-              data-ocid="invoice.pdf_download.button"
-            >
-              {isPdfLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Download className="h-4 w-4" />
-              )}
-              {isPdfLoading ? "তৈরি হচ্ছে..." : "PDF ডাউনলোড"}
-            </Button>
-            <Button
-              onClick={handlePrint}
-              variant="outline"
-              className="gap-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground"
-              data-ocid="invoice.print_button"
-            >
-              <Printer className="h-4 w-4" />
-              ইনভয়েস প্রিন্ট করুন
-            </Button>
+          <div className="text-right">
+            <p className="text-blue-100 text-sm">{today}</p>
+            <span className="inline-block mt-1 bg-white/20 text-white text-xs font-mono px-3 py-1 rounded-full border border-white/30">
+              {invoiceNumber}
+            </span>
           </div>
+        </div>
+      </div>
+
+      <div className="max-w-5xl mx-auto px-6 py-6">
+        {/* Action buttons */}
+        <div className="flex justify-end gap-3 mb-6 no-print">
+          <Button
+            onClick={handlePdfDownload}
+            className="gap-2 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white shadow-md border-0"
+            disabled={isPdfLoading}
+            data-ocid="invoice.pdf_download.button"
+          >
+            {isPdfLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Download className="h-4 w-4" />
+            )}
+            {isPdfLoading ? "তৈরি হচ্ছে..." : "PDF ডাউনলোড"}
+          </Button>
+          <Button
+            onClick={handlePrint}
+            className="gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md border-0"
+            data-ocid="invoice.print_button"
+          >
+            <Printer className="h-4 w-4" />
+            ইনভয়েস প্রিন্ট করুন
+          </Button>
         </div>
 
         {/* Invoice Content */}
-        <div id="invoice-content">
+        <div id="invoice-content" className="invoice-content-wrapper">
+          {/* Top header bar inside invoice */}
+          <div className="invoice-inner-header">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-xl">
+                  ⚕
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-white">
+                    Saum Pharmacy
+                  </h2>
+                  <p className="text-blue-100 text-xs">
+                    সাওম ফার্মেসি — বালিগাঁও, লাখাই, হবিগঞ্জ
+                  </p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-blue-100 text-xs mb-1">{today}</p>
+                <span className="text-white text-xs font-mono bg-white/20 px-2 py-0.5 rounded">
+                  {invoiceNumber}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Two-column info section */}
           <div
-            className="grid gap-6 mb-6 invoice-section"
+            className="grid gap-5 mb-5 p-5"
             style={{ gridTemplateColumns: "1fr 1fr" }}
           >
             {/* Left: Wholesaler Inputs */}
             <div
-              className="bg-card rounded-lg shadow-sm border border-border p-5 print-card"
+              className="wholesaler-card rounded-xl shadow-lg border-0 overflow-hidden"
               data-ocid="wholesaler.card"
             >
-              <h2 className="text-base font-semibold text-foreground mb-4 pb-2 border-b border-border">
-                হোলসেলার তথ্য
-              </h2>
-              <div className="space-y-4">
+              <div className="wholesaler-card-header px-5 py-3 flex items-center gap-2">
+                <div className="w-6 h-6 bg-teal-400/30 rounded flex items-center justify-center">
+                  <span className="text-teal-200 text-xs font-bold">W</span>
+                </div>
+                <h2 className="text-sm font-bold text-teal-800">হোলসেলার তথ্য</h2>
+              </div>
+              <div className="px-5 py-4 space-y-3 bg-white">
                 <div>
                   <Label
                     htmlFor="wholesaler-name"
-                    className="text-sm font-medium text-foreground mb-1 block"
+                    className="text-xs font-semibold text-slate-500 mb-1 block uppercase tracking-wide"
                   >
                     হোলসেলার/পাইকারের নাম
                   </Label>
-                  <Input
-                    id="wholesaler-name"
-                    type="text"
-                    placeholder="নাম লিখুন..."
-                    value={wholesaler.name}
-                    onChange={(e) =>
-                      setWholesaler((prev) => ({
-                        ...prev,
-                        name: e.target.value,
-                      }))
-                    }
-                    className="print-input w-full text-sm"
-                    data-ocid="wholesaler.name.input"
-                  />
+                  <div
+                    className="overflow-x-auto"
+                    style={{ whiteSpace: "nowrap" }}
+                  >
+                    <Input
+                      id="wholesaler-name"
+                      type="text"
+                      placeholder="নাম লিখুন..."
+                      value={wholesaler.name}
+                      onChange={(e) =>
+                        setWholesaler((prev) => ({
+                          ...prev,
+                          name: e.target.value,
+                        }))
+                      }
+                      className="print-input text-sm border-slate-200 focus:border-teal-400 focus:ring-teal-400"
+                      style={{ minWidth: "100%" }}
+                      data-ocid="wholesaler.name.input"
+                    />
+                  </div>
                 </div>
                 <div>
                   <Label
                     htmlFor="wholesaler-address"
-                    className="text-sm font-medium text-foreground mb-1 block"
+                    className="text-xs font-semibold text-slate-500 mb-1 block uppercase tracking-wide"
                   >
                     ঠিকানা
                   </Label>
-                  <Input
-                    id="wholesaler-address"
-                    type="text"
-                    placeholder="ঠিকানা লিখুন..."
-                    value={wholesaler.address}
-                    onChange={(e) =>
-                      setWholesaler((prev) => ({
-                        ...prev,
-                        address: e.target.value,
-                      }))
-                    }
-                    className="print-input w-full text-sm"
-                    data-ocid="wholesaler.address.input"
-                  />
+                  <div
+                    className="overflow-x-auto"
+                    style={{ whiteSpace: "nowrap" }}
+                  >
+                    <Input
+                      id="wholesaler-address"
+                      type="text"
+                      placeholder="ঠিকানা লিখুন..."
+                      value={wholesaler.address}
+                      onChange={(e) =>
+                        setWholesaler((prev) => ({
+                          ...prev,
+                          address: e.target.value,
+                        }))
+                      }
+                      className="print-input text-sm border-slate-200 focus:border-teal-400 focus:ring-teal-400"
+                      style={{ minWidth: "100%" }}
+                      data-ocid="wholesaler.address.input"
+                    />
+                  </div>
                 </div>
                 <div>
                   <Label
                     htmlFor="wholesaler-mobile"
-                    className="text-sm font-medium text-foreground mb-1 block"
+                    className="text-xs font-semibold text-slate-500 mb-1 block uppercase tracking-wide"
                   >
                     মোবাইল নম্বর
                   </Label>
-                  <Input
-                    id="wholesaler-mobile"
-                    type="tel"
-                    placeholder="মোবাইল নম্বর লিখুন..."
-                    value={wholesaler.mobile}
-                    onChange={(e) =>
-                      setWholesaler((prev) => ({
-                        ...prev,
-                        mobile: e.target.value,
-                      }))
-                    }
-                    className="print-input w-full text-sm"
-                    data-ocid="wholesaler.mobile.input"
-                  />
+                  <div
+                    className="overflow-x-auto"
+                    style={{ whiteSpace: "nowrap" }}
+                  >
+                    <Input
+                      id="wholesaler-mobile"
+                      type="tel"
+                      placeholder="মোবাইল নম্বর লিখুন..."
+                      value={wholesaler.mobile}
+                      onChange={(e) =>
+                        setWholesaler((prev) => ({
+                          ...prev,
+                          mobile: e.target.value,
+                        }))
+                      }
+                      className="print-input text-sm border-slate-200 focus:border-teal-400 focus:ring-teal-400"
+                      style={{ minWidth: "100%" }}
+                      data-ocid="wholesaler.mobile.input"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Right: Fixed Pharmacy Info */}
             <div
-              className="bg-card rounded-lg shadow-sm border border-border overflow-hidden print-card"
+              className="pharmacy-card rounded-xl shadow-lg border-0 overflow-hidden"
               data-ocid="pharmacy.info.card"
             >
-              <div className="bg-primary px-5 py-4">
-                <h2 className="text-xl font-bold text-primary-foreground">
-                  Saum Pharmacy
-                </h2>
-                <p className="text-sm text-primary-foreground opacity-80 mt-0.5">
-                  ফার্মেসি তথ্য
-                </p>
+              <div className="pharmacy-card-header px-5 py-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-lg font-bold text-white">
+                      Saum Pharmacy
+                    </h2>
+                    <p className="text-blue-100 text-xs">সাওম ফার্মেসি</p>
+                  </div>
+                  <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                    <span className="text-white text-lg">⚕</span>
+                  </div>
+                </div>
               </div>
-              <div className="px-5 py-4">
+              <div className="bg-white">
                 <table
                   className="w-full text-sm"
                   style={{ borderCollapse: "separate", borderSpacing: "0" }}
                 >
                   <tbody>
-                    <tr className="leading-8">
-                      <td className="font-semibold text-muted-foreground w-24 align-top">
-                        ঠিকানা:
+                    <tr className="pharmacy-info-row-even">
+                      <td className="px-4 py-2.5 font-semibold text-slate-500 w-28 align-middle">
+                        <div className="flex items-center gap-1.5">
+                          <MapPin className="h-3.5 w-3.5 text-blue-400 flex-shrink-0" />
+                          <span>ঠিকানা</span>
+                        </div>
                       </td>
-                      <td className="text-foreground">বালিগাঁও, লাখাই, হবিগঞ্জ</td>
+                      <td
+                        className="px-4 py-2.5 text-slate-700 font-medium"
+                        style={{
+                          overflowX: "auto",
+                          whiteSpace: "nowrap",
+                          maxWidth: "160px",
+                          display: "table-cell",
+                        }}
+                      >
+                        বালিগাঁও, লাখাই, হবিগঞ্জ
+                      </td>
                     </tr>
-                    <tr className="leading-8">
-                      <td className="font-semibold text-muted-foreground w-24 align-top">
-                        মোবাইল:
+                    <tr className="pharmacy-info-row-odd">
+                      <td className="px-4 py-2.5 font-semibold text-slate-500 w-28 align-middle">
+                        <div className="flex items-center gap-1.5">
+                          <Phone className="h-3.5 w-3.5 text-green-400 flex-shrink-0" />
+                          <span>মোবাইল</span>
+                        </div>
                       </td>
-                      <td className="text-foreground font-medium">
+                      <td
+                        className="px-4 py-2.5 text-slate-700 font-medium font-mono"
+                        style={{
+                          overflowX: "auto",
+                          whiteSpace: "nowrap",
+                          maxWidth: "160px",
+                          display: "table-cell",
+                        }}
+                      >
                         01648388329
                       </td>
                     </tr>
-                    <tr className="leading-8">
-                      <td className="font-semibold text-muted-foreground w-24 align-top">
-                        ইমেইল:
+                    <tr className="pharmacy-info-row-even">
+                      <td className="px-4 py-2.5 font-semibold text-slate-500 w-28 align-middle">
+                        <div className="flex items-center gap-1.5">
+                          <Mail className="h-3.5 w-3.5 text-purple-400 flex-shrink-0" />
+                          <span>ইমেইল</span>
+                        </div>
                       </td>
-                      <td className="text-foreground font-medium">
+                      <td
+                        className="px-4 py-2.5 font-medium"
+                        style={{
+                          overflowX: "auto",
+                          whiteSpace: "nowrap",
+                          maxWidth: "160px",
+                          display: "table-cell",
+                        }}
+                      >
                         <a
                           href="mailto:saumpharmacy@gmail.com"
-                          className="text-primary hover:underline"
+                          className="text-blue-600 hover:underline"
                         >
                           saumpharmacy@gmail.com
                         </a>
                       </td>
                     </tr>
-                    <tr className="leading-8">
-                      <td className="font-semibold text-muted-foreground w-24 align-top">
-                        তারিখ:
+                    <tr className="pharmacy-info-row-odd">
+                      <td className="px-4 py-2.5 font-semibold text-slate-500 w-28 align-middle">
+                        তারিখ
                       </td>
-                      <td className="text-foreground font-medium">{today}</td>
+                      <td
+                        className="px-4 py-2.5 text-slate-700 font-medium"
+                        style={{
+                          overflowX: "auto",
+                          whiteSpace: "nowrap",
+                          maxWidth: "160px",
+                          display: "table-cell",
+                        }}
+                      >
+                        {today}
+                      </td>
                     </tr>
-                    <tr className="leading-8">
-                      <td className="font-semibold text-muted-foreground w-24 align-top">
-                        ইনভয়েস নং:
+                    <tr className="pharmacy-info-row-even">
+                      <td className="px-4 py-2.5 font-semibold text-slate-500 w-28 align-middle">
+                        ইনভয়েস নং
                       </td>
-                      <td className="text-foreground font-mono font-medium">
+                      <td
+                        className="px-4 py-2.5 text-slate-700 font-mono font-semibold text-xs"
+                        style={{
+                          overflowX: "auto",
+                          whiteSpace: "nowrap",
+                          maxWidth: "160px",
+                          display: "table-cell",
+                        }}
+                      >
                         {invoiceNumber}
                       </td>
                     </tr>
@@ -718,68 +691,71 @@ export default function App() {
 
           {/* Invoice Table Card */}
           <div
-            className="bg-card rounded-lg shadow-sm border border-border overflow-hidden mb-6 invoice-section print-card"
-            style={{ borderTop: "3px solid oklch(0.491 0.129 244)" }}
+            className="mx-5 mb-5 rounded-xl shadow-lg overflow-hidden invoice-table-wrapper"
             data-ocid="invoice.table.card"
           >
-            <div className="p-5 border-b border-border">
-              <h2 className="text-base font-semibold text-foreground">
-                ঔষধের তালিকা
-              </h2>
+            <div className="table-section-header px-5 py-3 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-1.5 h-5 bg-cyan-300 rounded-full" />
+                <h2 className="text-sm font-bold text-white">ঔষধের তালিকা</h2>
+              </div>
+              <span className="text-blue-200 text-xs">
+                {rows.length} টি আইটেম
+              </span>
             </div>
 
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto bg-white">
               <table
                 className="w-full"
                 style={tableFontStyle}
                 data-ocid="invoice.table"
               >
                 <thead>
-                  <tr className="bg-primary text-primary-foreground">
+                  <tr className="invoice-table-thead">
                     <th
-                      className="px-3 py-3 text-center font-semibold w-10"
+                      className="px-3 py-3 text-center font-semibold w-10 text-white"
                       style={tableFontStyle}
                     >
                       ক্রমিক
                     </th>
                     <th
-                      className="px-3 py-3 text-left font-semibold"
+                      className="px-3 py-3 text-left font-semibold text-white"
                       style={tableFontStyle}
                     >
                       ঔষধের নাম
                     </th>
                     <th
-                      className="px-3 py-3 text-left font-semibold w-28"
+                      className="px-3 py-3 text-left font-semibold w-28 text-white"
                       style={tableFontStyle}
                     >
                       ধরন
                     </th>
                     <th
-                      className="px-3 py-3 text-left font-semibold w-28"
+                      className="px-3 py-3 text-left font-semibold w-28 text-white"
                       style={tableFontStyle}
                     >
                       মাপ
                     </th>
                     <th
-                      className="px-3 py-3 text-right font-semibold w-24"
+                      className="px-3 py-3 text-right font-semibold w-24 text-white"
                       style={tableFontStyle}
                     >
                       দর (টাকা)
                     </th>
                     <th
-                      className="px-3 py-3 text-right font-semibold w-24"
+                      className="px-3 py-3 text-right font-semibold w-24 text-white"
                       style={tableFontStyle}
                     >
                       পরিমাণ
                     </th>
                     <th
-                      className="px-3 py-3 text-right font-semibold w-24"
+                      className="px-3 py-3 text-right font-semibold w-24 text-white"
                       style={tableFontStyle}
                     >
                       দাম (টাকা)
                     </th>
                     <th
-                      className="px-3 py-3 text-center font-semibold w-10 no-print"
+                      className="px-3 py-3 text-center font-semibold w-10 no-print text-white"
                       style={tableFontStyle}
                     >
                       মুছুন
@@ -790,11 +766,13 @@ export default function App() {
                   {rows.map((row, index) => (
                     <tr
                       key={row.id}
-                      className="border-b border-border hover:bg-muted/30 transition-colors"
+                      className={`border-b border-slate-100 hover:bg-blue-50/60 transition-colors ${
+                        index % 2 === 0 ? "bg-white" : "bg-blue-50/40"
+                      }`}
                       data-ocid={`invoice.item.${index + 1}`}
                     >
                       <td
-                        className="px-3 py-2 text-center font-medium text-muted-foreground"
+                        className="px-3 py-2 text-center font-semibold text-slate-400"
                         style={tableFontStyle}
                       >
                         {index + 1}
@@ -818,7 +796,7 @@ export default function App() {
                           }
                         >
                           <SelectTrigger
-                            className="print-select h-8 border-border"
+                            className="print-select h-8 border-slate-200"
                             style={tableFontStyle}
                             data-ocid={`invoice.type.select.${index + 1}`}
                           >
@@ -841,12 +819,12 @@ export default function App() {
                               updateRow(row.id, "quantity", e.target.value)
                             }
                             placeholder="0"
-                            className="print-input w-full border border-border rounded px-2 py-1 bg-background focus:outline-none focus:ring-1 focus:ring-ring"
+                            className="print-input w-full border border-slate-200 rounded px-2 py-1 bg-background focus:outline-none focus:ring-1 focus:ring-blue-400"
                             style={tableFontStyle}
                             data-ocid={`invoice.quantity.input.${index + 1}`}
                           />
                           <span
-                            className="font-medium text-muted-foreground whitespace-nowrap bg-muted px-1.5 py-0.5 rounded"
+                            className="font-medium text-slate-400 whitespace-nowrap bg-slate-100 px-1.5 py-0.5 rounded"
                             style={{ fontSize: "10px" }}
                           >
                             {getUnitLabel(row.type)}
@@ -861,7 +839,7 @@ export default function App() {
                             updateRow(row.id, "unitPrice", e.target.value)
                           }
                           placeholder="-"
-                          className="print-input w-full border border-border rounded px-2 py-1 bg-background text-right focus:outline-none focus:ring-1 focus:ring-ring"
+                          className="print-input w-full border border-slate-200 rounded px-2 py-1 bg-background text-right focus:outline-none focus:ring-1 focus:ring-blue-400"
                           style={tableFontStyle}
                           data-ocid={`invoice.unit_price.input.${index + 1}`}
                         />
@@ -874,13 +852,13 @@ export default function App() {
                             updateRow(row.id, "units", e.target.value)
                           }
                           placeholder="0"
-                          className="print-input w-full border border-border rounded px-2 py-1 bg-background text-right focus:outline-none focus:ring-1 focus:ring-ring"
+                          className="print-input w-full border border-slate-200 rounded px-2 py-1 bg-background text-right focus:outline-none focus:ring-1 focus:ring-blue-400"
                           style={tableFontStyle}
                           data-ocid={`invoice.units.input.${index + 1}`}
                         />
                       </td>
                       <td
-                        className="px-3 py-2 text-right font-medium text-foreground"
+                        className="px-3 py-2 text-right font-semibold text-emerald-700"
                         style={tableFontStyle}
                         data-ocid={`invoice.total_price.input.${index + 1}`}
                       >
@@ -890,7 +868,7 @@ export default function App() {
                         <button
                           type="button"
                           onClick={() => deleteRow(row.id)}
-                          className="text-destructive hover:text-destructive/80 hover:bg-destructive/10 rounded p-1 transition-colors"
+                          className="text-red-400 hover:text-red-600 hover:bg-red-50 rounded p-1 transition-colors"
                           aria-label="সারি মুছুন"
                           data-ocid={`invoice.delete_button.${index + 1}`}
                         >
@@ -904,7 +882,7 @@ export default function App() {
                     <tr>
                       <td
                         colSpan={8}
-                        className="px-4 py-8 text-center text-muted-foreground text-sm"
+                        className="px-4 py-8 text-center text-slate-400 text-sm"
                         data-ocid="invoice.table.empty_state"
                       >
                         কোনো ঔষধ যোগ করা হয়নি। নিচের বোতাম দিয়ে সারি যোগ করুন।
@@ -915,39 +893,49 @@ export default function App() {
               </table>
             </div>
 
-            <div className="px-5 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-t border-border">
+            {/* Table footer: add row + grand total */}
+            <div className="px-5 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-gradient-to-r from-slate-50 to-blue-50 border-t border-slate-100">
               <Button
                 onClick={addRow}
                 variant="outline"
                 size="sm"
-                className="no-print gap-2 text-primary border-primary hover:bg-primary hover:text-primary-foreground"
+                className="no-print gap-2 text-teal-700 border-teal-300 hover:bg-teal-50 bg-white shadow-sm"
                 data-ocid="invoice.add_row.button"
               >
                 <PlusCircle className="h-4 w-4" />
                 সারি যোগ করুন
               </Button>
               <div
-                className="flex items-center gap-4 text-sm"
+                className="grand-total-badge flex items-center gap-3"
                 data-ocid="invoice.grand_total.panel"
               >
-                <span className="text-muted-foreground font-medium">
+                <span className="text-slate-500 font-medium text-sm">
                   সর্বমোট:
                 </span>
-                <span className="text-xl font-bold text-foreground">
+                <span className="text-2xl font-bold text-emerald-600">
                   ৳{grandTotal.toFixed(2)}
                 </span>
-                <span className="text-sm text-muted-foreground">টাকা</span>
+                <span className="text-xs text-slate-400 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                  টাকা
+                </span>
               </div>
             </div>
+          </div>
+
+          {/* Invoice footer inside content */}
+          <div className="invoice-footer-bar mx-5 mb-5 rounded-lg px-5 py-3">
+            <p className="text-center text-xs text-blue-200">
+              Saum Pharmacy — বালিগাঁও, লাখাই, হবিগঞ্জ &nbsp;|&nbsp; 01648388329
+              &nbsp;|&nbsp; saumpharmacy@gmail.com
+            </p>
           </div>
         </div>
 
         {/* Bottom actions bar */}
-        <div className="flex justify-end gap-3 no-print">
+        <div className="flex justify-end gap-3 mt-4 no-print">
           <Button
             onClick={handlePdfDownload}
-            variant="outline"
-            className="gap-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+            className="gap-2 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white shadow-lg border-0"
             size="lg"
             disabled={isPdfLoading}
             data-ocid="invoice.pdf_submit.button"
@@ -961,7 +949,7 @@ export default function App() {
           </Button>
           <Button
             onClick={handlePrint}
-            className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
+            className="gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg border-0"
             size="lg"
             data-ocid="invoice.print_submit.button"
           >

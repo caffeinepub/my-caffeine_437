@@ -1,3 +1,6 @@
+/* Google Fonts: Hind Siliguri for Bangla */
+@import url("https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -6,39 +9,38 @@
   :root {
     --radius: 0.625rem;
 
-    /* Page background: very light cool gray #EEF3F7 → oklch ~0.963 0.012 220 */
+    /* Page background: very light cool gray */
     --background: 0.963 0.012 220;
-    /* Foreground near-black #111827 → oklch ~0.142 0.012 254 */
     --foreground: 0.142 0.012 254;
 
-    /* Cards: white #FFFFFF */
+    /* Cards: white */
     --card: 1 0 0;
     --card-foreground: 0.142 0.012 254;
 
     --popover: 1 0 0;
     --popover-foreground: 0.142 0.012 254;
 
-    /* Primary brand blue #2B6CB0 → oklch ~0.491 0.129 244 */
+    /* Primary brand blue */
     --primary: 0.491 0.129 244;
     --primary-foreground: 1 0 0;
 
-    /* Secondary: light blue-gray */
+    /* Secondary */
     --secondary: 0.941 0.018 235;
     --secondary-foreground: 0.491 0.129 244;
 
-    /* Muted: light gray #F6F8FB → oklch ~0.977 0.008 220 */
+    /* Muted */
     --muted: 0.977 0.008 220;
     --muted-foreground: 0.481 0.014 237;
 
-    /* Accent: blue tint */
+    /* Accent */
     --accent: 0.93 0.025 240;
     --accent-foreground: 0.491 0.129 244;
 
-    /* Destructive: muted red #B91C1C → oklch ~0.444 0.182 25 */
+    /* Destructive */
     --destructive: 0.444 0.182 25;
     --destructive-foreground: 1 0 0;
 
-    /* Border: light gray #D6DDE6 → oklch ~0.87 0.014 235 */
+    /* Border */
     --border: 0.87 0.014 235;
     --input: 0.87 0.014 235;
     --ring: 0.491 0.129 244;
@@ -76,18 +78,125 @@
   }
 }
 
+/* ===== PREMIUM INVOICE DESIGN ===== */
+
+/* Top gradient banner */
+.invoice-header-banner {
+  background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 40%, #0e7490 100%);
+  border-bottom: 3px solid #06b6d4;
+  box-shadow: 0 4px 20px rgba(30, 58, 138, 0.35);
+}
+
+.pharmacy-logo-icon {
+  width: 48px;
+  height: 48px;
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Invoice content wrapper */
+.invoice-content-wrapper {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 8px 40px rgba(30, 58, 138, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  border: 1px solid rgba(30, 58, 138, 0.08);
+}
+
+/* Inner invoice header */
+.invoice-inner-header {
+  background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #0e7490 100%);
+  padding: 16px 20px;
+  border-bottom: 2px solid #06b6d4;
+}
+
+/* Wholesaler card */
+.wholesaler-card {
+  border: 1px solid #ccfbf1;
+  border-left: 4px solid #14b8a6;
+  background: white;
+}
+
+.wholesaler-card-header {
+  background: linear-gradient(90deg, #f0fdfa 0%, #e0fdf4 100%);
+  border-bottom: 1px solid #ccfbf1;
+}
+
+/* Pharmacy info card */
+.pharmacy-card {
+  border: 1px solid #dbeafe;
+  background: white;
+}
+
+.pharmacy-card-header {
+  background: linear-gradient(135deg, #1e40af 0%, #2563eb 50%, #4338ca 100%);
+}
+
+/* Pharmacy info zebra rows */
+.pharmacy-info-row-even {
+  background-color: #f8faff;
+}
+
+.pharmacy-info-row-odd {
+  background-color: #ffffff;
+}
+
+.pharmacy-info-row-even td,
+.pharmacy-info-row-odd td {
+  border-bottom: 1px solid #e8edf8;
+}
+
+/* Invoice table wrapper */
+.invoice-table-wrapper {
+  border: 1px solid #dbeafe;
+}
+
+.table-section-header {
+  background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 60%, #4338ca 100%);
+  border-bottom: 2px solid #3b82f6;
+}
+
+/* Table header row */
+.invoice-table-thead {
+  background: linear-gradient(90deg, #1e3a8a 0%, #1d4ed8 60%, #4338ca 100%);
+}
+
+.invoice-table-thead th {
+  color: white;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Grand total badge */
+.grand-total-badge {
+  background: linear-gradient(90deg, #ecfdf5, #f0fdf4);
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 6px 14px;
+}
+
+/* Invoice footer bar */
+.invoice-footer-bar {
+  background: linear-gradient(90deg, #1e3a8a, #1d4ed8, #0e7490);
+}
+
 /* ===== PRINT STYLES ===== */
 @media print {
   @page {
     size: A4;
-    margin: 1cm;
+    margin: 0.8cm;
   }
 
   body {
     background: white !important;
     color: black !important;
     font-family: "Hind Siliguri", "Noto Sans Bengali", sans-serif;
-    font-size: 12pt;
+    font-size: 11pt;
   }
 
   /* Hide interactive elements */
@@ -101,11 +210,29 @@
     padding: 0 !important;
   }
 
+  /* Invoice content wrapper: remove rounded, keep shadow-less */
+  .invoice-content-wrapper {
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    border: none !important;
+  }
+
   /* Card styling for print */
   .print-card {
     box-shadow: none !important;
     border: 1px solid #ccc !important;
     border-radius: 4px !important;
+    break-inside: avoid;
+  }
+
+  /* Wholesaler card for print */
+  .wholesaler-card {
+    box-shadow: none !important;
+    break-inside: avoid;
+  }
+
+  .pharmacy-card {
+    box-shadow: none !important;
     break-inside: avoid;
   }
 
@@ -149,6 +276,26 @@
     print-color-adjust: exact;
   }
 
+  .invoice-inner-header,
+  .wholesaler-card-header,
+  .pharmacy-card-header,
+  .table-section-header,
+  .invoice-footer-bar {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .invoice-table-thead {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .pharmacy-info-row-even {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    background-color: #f8faff !important;
+  }
+
   /* Page breaks */
   .page-break {
     page-break-before: always;
@@ -156,6 +303,10 @@
 
   /* Keep invoice together */
   .invoice-section {
+    break-inside: avoid;
+  }
+
+  .invoice-table-wrapper {
     break-inside: avoid;
   }
 }
