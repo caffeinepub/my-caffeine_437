@@ -768,7 +768,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* Right: Fixed Pharmacy Info */}
+            {/* Right: Fixed Pharmacy Info - Vertical Stack Layout */}
             <div
               className="pharmacy-card rounded-xl shadow-lg border-0 overflow-hidden"
               data-ocid="pharmacy.info.card"
@@ -797,74 +797,87 @@ export default function App() {
                   )}
                 </div>
               </div>
-              <div className="overflow-x-auto bg-white">
-                <table
-                  style={{
-                    fontSize: "11px",
-                    borderCollapse: "separate",
-                    borderSpacing: "0",
-                    minWidth: "max-content",
-                  }}
-                >
-                  <thead>
-                    <tr className="pharmacy-info-row-even">
-                      <th className="px-4 py-2.5 font-semibold text-slate-500 text-left whitespace-nowrap">
-                        <div className="flex items-center gap-1.5">
-                          <MapPin className="h-3.5 w-3.5 text-blue-400 flex-shrink-0" />
-                          <span>ঠিকানা</span>
-                        </div>
-                      </th>
-                      <th className="px-4 py-2.5 font-semibold text-slate-500 text-left whitespace-nowrap border-l border-slate-100">
-                        <div className="flex items-center gap-1.5">
-                          <Phone className="h-3.5 w-3.5 text-green-400 flex-shrink-0" />
-                          <span>মোবাইল</span>
-                        </div>
-                      </th>
-                      <th
-                        className="px-4 py-2.5 font-semibold text-slate-500 text-left whitespace-nowrap border-l border-slate-100"
-                        style={{ minWidth: "220px" }}
-                      >
-                        <div className="flex items-center gap-1.5">
-                          <Mail className="h-3.5 w-3.5 text-purple-400 flex-shrink-0" />
-                          <span>ইমেইল</span>
-                        </div>
-                      </th>
-                      <th className="px-4 py-2.5 font-semibold text-slate-500 text-left whitespace-nowrap border-l border-slate-100">
-                        তারিখ
-                      </th>
-                      <th className="px-4 py-2.5 font-semibold text-slate-500 text-left whitespace-nowrap border-l border-slate-100">
-                        ইনভয়েস নং
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr className="pharmacy-info-row-odd">
-                      <td className="px-4 py-2.5 text-slate-700 font-medium whitespace-nowrap">
-                        বালিগাঁও, লাখাই, হবিগঞ্জ
-                      </td>
-                      <td className="px-4 py-2.5 text-slate-700 font-medium font-mono whitespace-nowrap border-l border-slate-100">
-                        01648388329
-                      </td>
-                      <td
-                        className="px-4 py-2.5 font-medium whitespace-nowrap border-l border-slate-100"
-                        style={{ minWidth: "220px" }}
-                      >
-                        <a
-                          href="mailto:saumpharmacy@gmail.com"
-                          className="text-blue-600 hover:underline"
-                        >
-                          saumpharmacy@gmail.com
-                        </a>
-                      </td>
-                      <td className="px-4 py-2.5 text-slate-700 font-medium whitespace-nowrap border-l border-slate-100">
-                        {today}
-                      </td>
-                      <td className="px-4 py-2.5 text-slate-700 font-mono font-semibold text-xs whitespace-nowrap border-l border-slate-100">
-                        {invoiceNumber}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+              {/* Vertical stacked info — no horizontal scroll, no overflow risk */}
+              <div className="bg-white px-5 py-4 space-y-2.5">
+                {/* Address */}
+                <div className="flex items-start gap-2.5">
+                  <div className="flex items-center gap-1.5 w-24 flex-shrink-0">
+                    <MapPin className="h-3.5 w-3.5 text-blue-400 flex-shrink-0" />
+                    <span
+                      className="text-slate-500 font-semibold uppercase tracking-wide"
+                      style={{ fontSize: "11px" }}
+                    >
+                      ঠিকানা
+                    </span>
+                  </div>
+                  <span
+                    className="text-slate-700 font-medium"
+                    style={{ fontSize: "11px" }}
+                  >
+                    বালিগাঁও, লাখাই, হবিগঞ্জ
+                  </span>
+                </div>
+                {/* Divider */}
+                <div className="border-t border-slate-100" />
+                {/* Phone */}
+                <div className="flex items-start gap-2.5">
+                  <div className="flex items-center gap-1.5 w-24 flex-shrink-0">
+                    <Phone className="h-3.5 w-3.5 text-green-400 flex-shrink-0" />
+                    <span
+                      className="text-slate-500 font-semibold uppercase tracking-wide"
+                      style={{ fontSize: "11px" }}
+                    >
+                      মোবাইল
+                    </span>
+                  </div>
+                  <span
+                    className="text-slate-700 font-medium font-mono"
+                    style={{ fontSize: "11px" }}
+                  >
+                    01648388329
+                  </span>
+                </div>
+                {/* Divider */}
+                <div className="border-t border-slate-100" />
+                {/* Email */}
+                <div className="flex items-start gap-2.5">
+                  <div className="flex items-center gap-1.5 w-24 flex-shrink-0">
+                    <Mail className="h-3.5 w-3.5 text-purple-400 flex-shrink-0" />
+                    <span
+                      className="text-slate-500 font-semibold uppercase tracking-wide"
+                      style={{ fontSize: "11px" }}
+                    >
+                      ইমেইল
+                    </span>
+                  </div>
+                  <a
+                    href="mailto:saumpharmacy@gmail.com"
+                    className="text-blue-600 hover:underline font-medium"
+                    style={{ fontSize: "11px" }}
+                  >
+                    saumpharmacy@gmail.com
+                  </a>
+                </div>
+                {/* Divider */}
+                <div className="border-t border-slate-100" />
+                {/* Date & Invoice number row */}
+                <div className="flex items-center justify-between gap-2">
+                  <span
+                    className="text-slate-500 font-medium"
+                    style={{ fontSize: "11px" }}
+                  >
+                    তারিখ:{" "}
+                    <span className="text-slate-700 font-semibold">
+                      {today}
+                    </span>
+                  </span>
+                  <span
+                    className="text-slate-500 font-mono font-semibold bg-slate-50 border border-slate-200 px-2 py-0.5 rounded"
+                    style={{ fontSize: "11px" }}
+                  >
+                    {invoiceNumber}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
