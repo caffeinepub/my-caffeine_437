@@ -403,9 +403,31 @@ export default function App() {
         el.style.display = "none";
       }
 
+      // Also zero out no-print <col> elements so they don't reserve space in PDF
+      const noPrintCols = Array.from(
+        invoiceEl.querySelectorAll("col.no-print"),
+      ) as HTMLElement[];
+      const origColWidths = noPrintCols.map((col) => col.style.width);
+      for (const col of noPrintCols) {
+        col.style.width = "0";
+      }
+
       // Make overflow visible so html2canvas can capture full width
       const origOverflow = invoiceEl.style.overflow;
       invoiceEl.style.overflow = "visible";
+
+      // Also make all overflow-x:auto children visible for full capture
+      const scrollContainers = Array.from(
+        invoiceEl.querySelectorAll(".overflow-x-auto"),
+      ) as HTMLElement[];
+      const origScrollOverflows = scrollContainers.map((el) => ({
+        overflow: el.style.overflow,
+        overflowX: el.style.overflowX,
+      }));
+      for (const el of scrollContainers) {
+        el.style.overflow = "visible";
+        el.style.overflowX = "visible";
+      }
 
       // Wait for layout to settle
       await new Promise((resolve) => requestAnimationFrame(resolve));
@@ -423,13 +445,20 @@ export default function App() {
         logging: false,
         width: captureWidth,
         height: captureHeight,
-        windowWidth: captureWidth,
+        windowWidth: captureWidth + 200,
       });
 
-      // Restore styles
+      // Restore all styles
       invoiceEl.style.overflow = origOverflow;
       for (let i = 0; i < noPrintEls.length; i++) {
         noPrintEls[i].style.display = origDisplays[i];
+      }
+      for (let i = 0; i < noPrintCols.length; i++) {
+        noPrintCols[i].style.width = origColWidths[i];
+      }
+      for (let i = 0; i < scrollContainers.length; i++) {
+        scrollContainers[i].style.overflow = origScrollOverflows[i].overflow;
+        scrollContainers[i].style.overflowX = origScrollOverflows[i].overflowX;
       }
 
       const imgData = canvas.toDataURL("image/jpeg", 0.95);
@@ -779,7 +808,10 @@ export default function App() {
                           <span>মোবাইল</span>
                         </div>
                       </th>
-                      <th className="px-4 py-2.5 font-semibold text-slate-500 text-left whitespace-nowrap border-l border-slate-100">
+                      <th
+                        className="px-4 py-2.5 font-semibold text-slate-500 text-left whitespace-nowrap border-l border-slate-100"
+                        style={{ minWidth: "220px" }}
+                      >
                         <div className="flex items-center gap-1.5">
                           <Mail className="h-3.5 w-3.5 text-purple-400 flex-shrink-0" />
                           <span>ইমেইল</span>
@@ -801,7 +833,10 @@ export default function App() {
                       <td className="px-4 py-2.5 text-slate-700 font-medium font-mono whitespace-nowrap border-l border-slate-100">
                         01648388329
                       </td>
-                      <td className="px-4 py-2.5 font-medium whitespace-nowrap border-l border-slate-100">
+                      <td
+                        className="px-4 py-2.5 font-medium whitespace-nowrap border-l border-slate-100"
+                        style={{ minWidth: "220px" }}
+                      >
                         <a
                           href="mailto:saumpharmacy@gmail.com"
                           className="text-blue-600 hover:underline"
