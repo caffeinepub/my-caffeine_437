@@ -9,6 +9,20 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+      @media print {
+        @page { size: A4 portrait; margin: 6mm; }
+        html, body { margin: 0; padding: 0; background: white !important; }
+        .no-print { display: none !important; }
+        .print-wrapper { background: white !important; min-height: unset !important; }
+        #invoice-content {
+          width: 100% !important;
+          max-width: 794px !important;
+          margin: 0 auto;
+          transform-origin: top left;
+        }
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>

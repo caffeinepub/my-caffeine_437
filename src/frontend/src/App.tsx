@@ -255,7 +255,6 @@ function MedicineNameInput({
           height: "auto",
           minHeight: "40px",
           width: "100%",
-          minWidth: "160px",
         }}
         data-ocid={`invoice.medicine_name.input.${index + 1}`}
         autoComplete="off"
@@ -391,6 +390,14 @@ export default function App() {
         htmlEl.style.display = "none";
       }
 
+      // Temporarily constrain to A4 width for consistent PDF capture
+      const origWidth = invoiceEl.style.width;
+      const origMaxWidth = invoiceEl.style.maxWidth;
+      const origOverflow = invoiceEl.style.overflow;
+      invoiceEl.style.width = "794px";
+      invoiceEl.style.maxWidth = "794px";
+      invoiceEl.style.overflow = "visible";
+
       const canvas = await html2canvas(invoiceEl, {
         scale: 3,
         useCORS: true,
@@ -398,6 +405,11 @@ export default function App() {
         backgroundColor: "#ffffff",
         logging: false,
       });
+
+      // Restore A4 overrides
+      invoiceEl.style.width = origWidth;
+      invoiceEl.style.maxWidth = origMaxWidth;
+      invoiceEl.style.overflow = origOverflow;
 
       // Restore hidden elements
       for (let i = 0; i < noPrintEls.length; i++) {
@@ -471,7 +483,7 @@ export default function App() {
     >
       {/* Premium Header Banner */}
       <div className="invoice-header-banner no-print">
-        <div className="max-w-5xl mx-auto px-6 py-5 flex items-center justify-between">
+        <div className="max-w-full mx-auto px-8 py-5 flex items-center justify-between">
           <div className="flex items-center gap-4">
             {logoUrl ? (
               <img
@@ -537,7 +549,7 @@ export default function App() {
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-6 py-6">
+      <div className="max-w-full mx-auto px-4 md:px-8 py-6">
         {/* Action buttons */}
         <div className="flex justify-end gap-3 mb-6 no-print">
           <Button
@@ -800,19 +812,23 @@ export default function App() {
             <div className="overflow-x-auto bg-white">
               <table
                 className="w-full"
-                style={{ ...tableFontStyle, tableLayout: "fixed" }}
+                style={{
+                  ...tableFontStyle,
+                  tableLayout: "fixed",
+                  minWidth: "1100px",
+                }}
                 data-ocid="invoice.table"
               >
                 <colgroup>
                   <col style={{ width: "36px" }} />
-                  <col style={{ width: "auto" }} />
+                  <col style={{ width: "340px" }} />
+                  <col style={{ width: "120px" }} />
                   <col style={{ width: "100px" }} />
-                  <col style={{ width: "90px" }} />
-                  <col style={{ width: "90px" }} />
-                  <col style={{ width: "90px" }} />
-                  <col style={{ width: "90px" }} />
-                  <col style={{ width: "90px" }} />
-                  <col style={{ width: "40px" }} className="no-print" />
+                  <col style={{ width: "100px" }} />
+                  <col style={{ width: "100px" }} />
+                  <col style={{ width: "100px" }} />
+                  <col style={{ width: "100px" }} />
+                  <col style={{ width: "44px" }} className="no-print" />
                 </colgroup>
                 <thead>
                   <tr className="invoice-table-thead">
