@@ -34,6 +34,27 @@ declare const html2canvas: (
   },
 ) => Promise<HTMLCanvasElement>;
 
+// jsPDF is loaded from CDN in index.html
+declare const jspdf: {
+  jsPDF: new (
+    orientation?: string,
+    unit?: string,
+    format?: string | number[],
+  ) => {
+    addImage: (
+      imageData: string,
+      format: string,
+      x: number,
+      y: number,
+      width: number,
+      height: number,
+    ) => void;
+    addPage: () => void;
+    save: (filename: string) => void;
+    internal: { pageSize: { getWidth: () => number; getHeight: () => number } };
+  };
+};
+
 type MedicineType = "ট্যাবলেট" | "সিরাপ" | "ক্যাপসুল" | "ড্রপ";
 type UnitLabel = "টি" | "পিস" | "বক্স" | "প্যাকেট" | "পাতা";
 
@@ -356,8 +377,12 @@ export default function App() {
     setIsPdfLoading(true);
     try {
       const invoiceEl = document.getElementById("invoice-content");
-      if (!invoiceEl) return;
+      if (!invoiceEl) {
+        alert("ইনভয়েস এলিমেন্ট খুঁজে পাওয়া যায়নি।");
+        return;
+      }
 
+      // Hide non-printable elements temporarily
       const noPrintEls = Array.from(invoiceEl.querySelectorAll(".no-print"));
       const originalDisplays: string[] = [];
       for (const el of noPrintEls) {
@@ -374,28 +399,66 @@ export default function App() {
         logging: false,
       });
 
+      // Restore hidden elements
       for (let i = 0; i < noPrintEls.length; i++) {
         (noPrintEls[i] as HTMLElement).style.display = originalDisplays[i];
       }
 
-      canvas.toBlob(
-        (blob) => {
-          if (!blob) return;
-          const url = URL.createObjectURL(blob);
-          const link = document.createElement("a");
-          link.href = url;
-          link.download = `saum-pharmacy-invoice-${invoiceNumber}.png`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          URL.revokeObjectURL(url);
-        },
-        "image/png",
-        1.0,
-      );
+      const imgData = canvas.toDataURL("image/jpeg", 1.0);
+
+      // A4 dimensions in mm
+      const a4Width = 210;
+      const a4Height = 297;
+
+      const { jsPDF } = jspdf;
+      const pdf = new jsPDF("portrait", "mm", "a4");
+
+      const canvasWidth = canvas.width;
+      const canvasHeight = canvas.height;
+      const ratio = canvasHeight / canvasWidth;
+
+      // Scale image to fit A4 width
+      const imgWidth = a4Width;
+      const imgHeight = a4Width * ratio;
+
+      if (imgHeight <= a4Height) {
+        // Single page
+        pdf.addImage(imgData, "JPEG", 0, 0, imgWidth, imgHeight);
+      } else {
+        // Multi-page: slice canvas into A4-height pages
+        const pageHeightPx = Math.floor(canvasWidth * (a4Height / a4Width));
+        let offsetY = 0;
+        while (offsetY < canvasHeight) {
+          const sliceHeight = Math.min(pageHeightPx, canvasHeight - offsetY);
+          const pageCanvas = document.createElement("canvas");
+          pageCanvas.width = canvasWidth;
+          pageCanvas.height = sliceHeight;
+          const ctx = pageCanvas.getContext("2d");
+          if (ctx) {
+            ctx.drawImage(
+              canvas,
+              0,
+              offsetY,
+              canvasWidth,
+              sliceHeight,
+              0,
+              0,
+              canvasWidth,
+              sliceHeight,
+            );
+          }
+          const pageData = pageCanvas.toDataURL("image/jpeg", 1.0);
+          const pageImgHeight = a4Width * (sliceHeight / canvasWidth);
+          if (offsetY > 0) pdf.addPage();
+          pdf.addImage(pageData, "JPEG", 0, 0, a4Width, pageImgHeight);
+          offsetY += sliceHeight;
+        }
+      }
+
+      pdf.save(`saum-pharmacy-invoice-${invoiceNumber}.pdf`);
     } catch (err) {
       console.error("PDF generation failed:", err);
-      alert("ডাউনলোডে সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।");
+      alert("PDF ডাউনলোডে সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।");
     } finally {
       setIsPdfLoading(false);
     }
