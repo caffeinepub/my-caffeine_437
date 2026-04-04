@@ -653,96 +653,64 @@ export default function App() {
                   )}
                 </div>
               </div>
-              <div className="bg-white">
+              <div className="overflow-x-auto bg-white">
                 <table
-                  className="w-full text-sm"
-                  style={{ borderCollapse: "separate", borderSpacing: "0" }}
+                  className="text-sm"
+                  style={{
+                    borderCollapse: "separate",
+                    borderSpacing: "0",
+                    minWidth: "max-content",
+                  }}
                 >
-                  <tbody>
+                  <thead>
                     <tr className="pharmacy-info-row-even">
-                      <td className="px-4 py-2.5 font-semibold text-slate-500 w-28 align-top">
-                        <div className="flex items-center gap-1.5 pt-0.5">
+                      <th className="px-4 py-2.5 font-semibold text-slate-500 text-left whitespace-nowrap">
+                        <div className="flex items-center gap-1.5">
                           <MapPin className="h-3.5 w-3.5 text-blue-400 flex-shrink-0" />
                           <span>ঠিকানা</span>
                         </div>
-                      </td>
-                      <td className="px-4 py-2.5 text-slate-700 font-medium">
-                        <span
-                          style={{
-                            wordBreak: "break-word",
-                            whiteSpace: "normal",
-                          }}
-                        >
-                          বালিগাঁও, লাখাই, হবিগঞ্জ
-                        </span>
-                      </td>
-                    </tr>
-                    <tr className="pharmacy-info-row-odd">
-                      <td className="px-4 py-2.5 font-semibold text-slate-500 w-28 align-middle">
+                      </th>
+                      <th className="px-4 py-2.5 font-semibold text-slate-500 text-left whitespace-nowrap border-l border-slate-100">
                         <div className="flex items-center gap-1.5">
                           <Phone className="h-3.5 w-3.5 text-green-400 flex-shrink-0" />
                           <span>মোবাইল</span>
                         </div>
-                      </td>
-                      <td className="px-4 py-2.5 text-slate-700 font-medium font-mono">
-                        <span
-                          style={{
-                            wordBreak: "break-all",
-                            whiteSpace: "normal",
-                          }}
-                        >
-                          01648388329
-                        </span>
-                      </td>
-                    </tr>
-                    <tr className="pharmacy-info-row-even">
-                      <td className="px-4 py-2.5 font-semibold text-slate-500 w-28 align-middle">
+                      </th>
+                      <th className="px-4 py-2.5 font-semibold text-slate-500 text-left whitespace-nowrap border-l border-slate-100">
                         <div className="flex items-center gap-1.5">
                           <Mail className="h-3.5 w-3.5 text-purple-400 flex-shrink-0" />
                           <span>ইমেইল</span>
                         </div>
+                      </th>
+                      <th className="px-4 py-2.5 font-semibold text-slate-500 text-left whitespace-nowrap border-l border-slate-100">
+                        তারিখ
+                      </th>
+                      <th className="px-4 py-2.5 font-semibold text-slate-500 text-left whitespace-nowrap border-l border-slate-100">
+                        ইনভয়েস নং
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="pharmacy-info-row-odd">
+                      <td className="px-4 py-2.5 text-slate-700 font-medium whitespace-nowrap">
+                        বালিগাঁও, লাখাই, হবিগঞ্জ
                       </td>
-                      <td className="px-4 py-2.5 font-medium">
+                      <td className="px-4 py-2.5 text-slate-700 font-medium font-mono whitespace-nowrap border-l border-slate-100">
+                        01648388329
+                      </td>
+                      <td className="px-4 py-2.5 font-medium whitespace-nowrap border-l border-slate-100">
                         <a
                           href="mailto:saumpharmacy@gmail.com"
-                          className="text-blue-600 hover:underline break-all"
-                          style={{
-                            wordBreak: "break-all",
-                            whiteSpace: "normal",
-                          }}
+                          className="text-blue-600 hover:underline"
                         >
                           saumpharmacy@gmail.com
                         </a>
                       </td>
-                    </tr>
-                    <tr className="pharmacy-info-row-odd">
-                      <td className="px-4 py-2.5 font-semibold text-slate-500 w-28 align-middle">
-                        তারিখ
+                      <td className="px-4 py-2.5 text-slate-700 font-medium whitespace-nowrap border-l border-slate-100">
+                        {today}
                       </td>
-                      <td className="px-4 py-2.5 text-slate-700 font-medium">
-                        <span
-                          style={{
-                            wordBreak: "break-word",
-                            whiteSpace: "normal",
-                          }}
-                        >
-                          {today}
-                        </span>
-                      </td>
-                    </tr>
-                    <tr className="pharmacy-info-row-even">
-                      <td className="px-4 py-2.5 font-semibold text-slate-500 w-28 align-middle">
-                        ইনভয়েস নং
-                      </td>
-                      <td className="px-4 py-2.5 text-slate-700 font-mono font-semibold text-xs">
-                        <span
-                          style={{
-                            wordBreak: "break-all",
-                            whiteSpace: "normal",
-                          }}
-                        >
-                          {invoiceNumber}
-                        </span>
+                      <td className="px-4 py-2.5 text-slate-700 font-mono font-semibold text-xs whitespace-nowrap border-l border-slate-100">
+                        {invoiceNumber}
                       </td>
                     </tr>
                   </tbody>
@@ -776,7 +744,7 @@ export default function App() {
                   <col style={{ width: "36px" }} />
                   <col style={{ width: "auto" }} />
                   <col style={{ width: "100px" }} />
-                  <col style={{ width: "130px" }} />
+                  <col style={{ width: "90px" }} />
                   <col style={{ width: "90px" }} />
                   <col style={{ width: "90px" }} />
                   <col style={{ width: "90px" }} />
@@ -894,31 +862,18 @@ export default function App() {
                         </Select>
                       </td>
                       <td className="px-2 py-2">
-                        <div className="flex items-center gap-1">
-                          <input
-                            type="number"
-                            value={row.quantity}
-                            onChange={(e) =>
-                              updateRow(row.id, "quantity", e.target.value)
-                            }
-                            placeholder=""
-                            className="print-input w-full border border-slate-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-400"
-                            style={{ ...FIELD_STYLE, minWidth: "50px" }}
-                            data-ocid={`invoice.quantity.input.${index + 1}`}
-                          />
-                          <span
-                            className="font-medium text-slate-500 whitespace-nowrap bg-slate-100 px-1.5 rounded flex items-center self-stretch"
-                            style={{
-                              fontSize: "11px",
-                              minWidth: "28px",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                            }}
-                          >
-                            {getUnitLabel(row.type)}
-                          </span>
-                        </div>
+                        <input
+                          type="number"
+                          value={row.quantity}
+                          onChange={(e) =>
+                            updateRow(row.id, "quantity", e.target.value)
+                          }
+                          placeholder=""
+                          title={getUnitLabel(row.type)}
+                          className="print-input w-full border border-slate-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-400"
+                          style={FIELD_STYLE}
+                          data-ocid={`invoice.quantity.input.${index + 1}`}
+                        />
                       </td>
                       <td className="px-2 py-2">
                         <input
