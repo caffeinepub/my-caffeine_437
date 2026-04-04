@@ -91,8 +91,8 @@ const MEDICINE_STORAGE_KEY = "saum_pharmacy_medicines";
 // Consistent field style applied to ALL inputs and selects
 const FIELD_STYLE: React.CSSProperties = {
   height: "40px",
-  fontSize: "14px",
-  padding: "8px 10px",
+  fontSize: "12px",
+  padding: "6px 8px",
   color: "#1e293b",
   fontWeight: "700",
   backgroundColor: "#ffffff",
@@ -317,9 +317,9 @@ export default function App() {
 
   const tableFontStyle = useMemo(() => {
     const count = rows.length;
-    if (count <= 10) return { fontSize: "14px" };
-    if (count <= 15) return { fontSize: "12px" };
-    if (count <= 22) return { fontSize: "10px" };
+    if (count <= 10) return { fontSize: "12px" };
+    if (count <= 15) return { fontSize: "11px" };
+    if (count <= 22) return { fontSize: "9px" };
     return { fontSize: "8px" };
   }, [rows.length]);
 
@@ -394,72 +394,85 @@ export default function App() {
         return;
       }
 
-      // Hide no-print elements before capture
+      // A4 pixel width at 96dpi = 794px
+      const A4_PX_WIDTH = 794;
+
+      // Clone the invoice into an off-screen container at exactly 794px wide
+      const container = document.createElement("div");
+      container.style.position = "fixed";
+      container.style.top = "-9999px";
+      container.style.left = "-9999px";
+      container.style.width = `${A4_PX_WIDTH}px`;
+      container.style.overflow = "visible";
+      container.style.zIndex = "-1";
+      document.body.appendChild(container);
+
+      const clone = invoiceEl.cloneNode(true) as HTMLElement;
+      clone.style.width = `${A4_PX_WIDTH}px`;
+      clone.style.overflow = "visible";
+      container.appendChild(clone);
+
+      // Remove all no-print elements from clone
       const noPrintEls = Array.from(
-        invoiceEl.querySelectorAll(".no-print"),
+        clone.querySelectorAll(".no-print"),
       ) as HTMLElement[];
-      const origDisplays = noPrintEls.map((el) => el.style.display);
       for (const el of noPrintEls) {
         el.style.display = "none";
       }
 
-      // Also zero out no-print <col> elements so they don't reserve space in PDF
-      const noPrintCols = Array.from(
-        invoiceEl.querySelectorAll("col.no-print"),
-      ) as HTMLElement[];
-      const origColWidths = noPrintCols.map((col) => col.style.width);
-      for (const col of noPrintCols) {
-        col.style.width = "0";
+      // Remove all overflow-x:auto / overflow constraints in clone so nothing is clipped
+      const allEls = Array.from(clone.querySelectorAll("*")) as HTMLElement[];
+      for (const el of allEls) {
+        const cs = window.getComputedStyle(el);
+        if (cs.overflowX === "auto" || cs.overflowX === "scroll") {
+          el.style.overflowX = "visible";
+          el.style.overflow = "visible";
+        }
+        if (cs.overflowY === "auto" || cs.overflowY === "scroll") {
+          el.style.overflowY = "visible";
+        }
+        if (el.style.minWidth?.includes("max-content")) {
+          el.style.minWidth = "unset";
+        }
       }
 
-      // Make overflow visible so html2canvas can capture full width
-      const origOverflow = invoiceEl.style.overflow;
-      invoiceEl.style.overflow = "visible";
-
-      // Also make all overflow-x:auto children visible for full capture
-      const scrollContainers = Array.from(
-        invoiceEl.querySelectorAll(".overflow-x-auto"),
+      // Fix tables: stretch to full 794px and remove minWidth constraints
+      const tables = Array.from(
+        clone.querySelectorAll("table"),
       ) as HTMLElement[];
-      const origScrollOverflows = scrollContainers.map((el) => ({
-        overflow: el.style.overflow,
-        overflowX: el.style.overflowX,
-      }));
-      for (const el of scrollContainers) {
-        el.style.overflow = "visible";
-        el.style.overflowX = "visible";
+      for (const tbl of tables) {
+        tbl.style.width = "100%";
+        tbl.style.tableLayout = "fixed";
+        if (tbl.style.minWidth) tbl.style.minWidth = "unset";
+      }
+
+      // Zero out no-print col elements so they don't reserve space
+      const noPrintCols = Array.from(
+        clone.querySelectorAll("col.no-print"),
+      ) as HTMLElement[];
+      for (const col of noPrintCols) {
+        col.style.width = "0";
       }
 
       // Wait for layout to settle
       await new Promise((resolve) => requestAnimationFrame(resolve));
       await new Promise((resolve) => requestAnimationFrame(resolve));
 
-      // Capture at the element's full scrollWidth so nothing gets clipped
-      const captureWidth = invoiceEl.scrollWidth;
-      const captureHeight = invoiceEl.scrollHeight;
+      const captureHeight = clone.scrollHeight;
 
-      const canvas = await html2canvas(invoiceEl, {
+      const canvas = await html2canvas(clone, {
         scale: 2,
         useCORS: true,
         allowTaint: true,
         backgroundColor: "#ffffff",
         logging: false,
-        width: captureWidth,
+        width: A4_PX_WIDTH,
         height: captureHeight,
-        windowWidth: captureWidth + 200,
+        windowWidth: A4_PX_WIDTH,
       });
 
-      // Restore all styles
-      invoiceEl.style.overflow = origOverflow;
-      for (let i = 0; i < noPrintEls.length; i++) {
-        noPrintEls[i].style.display = origDisplays[i];
-      }
-      for (let i = 0; i < noPrintCols.length; i++) {
-        noPrintCols[i].style.width = origColWidths[i];
-      }
-      for (let i = 0; i < scrollContainers.length; i++) {
-        scrollContainers[i].style.overflow = origScrollOverflows[i].overflow;
-        scrollContainers[i].style.overflowX = origScrollOverflows[i].overflowX;
-      }
+      // Remove the off-screen clone
+      document.body.removeChild(container);
 
       const imgData = canvas.toDataURL("image/jpeg", 0.95);
 
@@ -478,7 +491,7 @@ export default function App() {
       const pdf = new jsPDF("portrait", "mm", "a4");
 
       if (imgH <= printableH) {
-        // Single page — fits perfectly
+        // Single page
         pdf.addImage(imgData, "JPEG", marginMm, marginMm, printableW, imgH);
       } else {
         // Multi-page: slice canvas by height
@@ -508,11 +521,10 @@ export default function App() {
               sliceH,
             );
           }
-          const pageData = pageCanvas.toDataURL("image/jpeg", 0.95);
           const pageImgH = printableW * (sliceH / canvas.width);
           if (pageNum > 0) pdf.addPage();
           pdf.addImage(
-            pageData,
+            pageCanvas.toDataURL("image/jpeg", 0.95),
             "JPEG",
             marginMm,
             marginMm,
@@ -650,7 +662,7 @@ export default function App() {
                   </div>
                 )}
                 <div>
-                  <h2 className="text-xl font-bold text-white">
+                  <h2 className="text-lg font-bold text-white">
                     Saum Pharmacy
                   </h2>
                   <p className="text-blue-100 text-xs">
@@ -703,7 +715,7 @@ export default function App() {
                       }))
                     }
                     className="print-input border-slate-200 focus:border-teal-400 focus:ring-teal-400 w-full"
-                    style={FIELD_STYLE}
+                    style={{ ...FIELD_STYLE, fontSize: "11px" }}
                     data-ocid="wholesaler.name.input"
                   />
                 </div>
@@ -726,7 +738,7 @@ export default function App() {
                       }))
                     }
                     className="print-input border-slate-200 focus:border-teal-400 focus:ring-teal-400 w-full"
-                    style={FIELD_STYLE}
+                    style={{ ...FIELD_STYLE, fontSize: "11px" }}
                     data-ocid="wholesaler.address.input"
                   />
                 </div>
@@ -749,7 +761,7 @@ export default function App() {
                       }))
                     }
                     className="print-input border-slate-200 focus:border-teal-400 focus:ring-teal-400 w-full"
-                    style={FIELD_STYLE}
+                    style={{ ...FIELD_STYLE, fontSize: "11px" }}
                     data-ocid="wholesaler.mobile.input"
                   />
                 </div>
@@ -787,8 +799,8 @@ export default function App() {
               </div>
               <div className="overflow-x-auto bg-white">
                 <table
-                  className="text-sm"
                   style={{
+                    fontSize: "11px",
                     borderCollapse: "separate",
                     borderSpacing: "0",
                     minWidth: "max-content",
@@ -878,20 +890,20 @@ export default function App() {
                 style={{
                   ...tableFontStyle,
                   tableLayout: "fixed",
-                  minWidth: "715px",
+                  minWidth: "650px",
                 }}
                 data-ocid="invoice.table"
               >
                 <colgroup>
-                  <col style={{ width: "30px" }} />
-                  <col style={{ width: "200px" }} />
-                  <col style={{ width: "85px" }} />
+                  <col style={{ width: "25px" }} />
+                  <col style={{ width: "180px" }} />
                   <col style={{ width: "80px" }} />
-                  <col style={{ width: "80px" }} />
-                  <col style={{ width: "80px" }} />
-                  <col style={{ width: "80px" }} />
-                  <col style={{ width: "80px" }} />
-                  <col style={{ width: "40px" }} className="no-print" />
+                  <col style={{ width: "75px" }} />
+                  <col style={{ width: "75px" }} />
+                  <col style={{ width: "75px" }} />
+                  <col style={{ width: "75px" }} />
+                  <col style={{ width: "75px" }} />
+                  <col style={{ width: "35px" }} className="no-print" />
                 </colgroup>
                 <thead>
                   <tr className="invoice-table-thead">
@@ -1125,7 +1137,7 @@ export default function App() {
                 <span className="text-slate-500 font-medium text-sm">
                   সর্বমোট:
                 </span>
-                <span className="text-2xl font-bold text-emerald-600">
+                <span className="text-xl font-bold text-emerald-600">
                   ৳{grandTotal.toFixed(2)}
                 </span>
                 <span className="text-xs text-slate-400 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
