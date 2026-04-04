@@ -64,7 +64,22 @@ declare global {
   }
 }
 
-type MedicineType = "ট্যাবলেট" | "সিরাপ" | "ক্যাপসুল" | "ড্রপ";
+type MedicineType =
+  | "ট্যাবলেট"
+  | "সিরাপ"
+  | "ক্যাপসুল"
+  | "ড্রপ"
+  | "ইনজেকশন"
+  | "IV"
+  | "ORS"
+  | "ক্রিম"
+  | "অয়েন্টমেন্ট"
+  | "সাপোজিটরি"
+  | "ইনহেলার"
+  | "পাউডার"
+  | "জেল"
+  | "লোশন"
+  | "স্প্রে";
 type UnitLabel = "টি" | "পিস" | "বক্স" | "প্যাকেট" | "পাতা";
 
 const UNIT_OPTIONS: UnitLabel[] = ["টি", "পিস", "বক্স", "প্যাকেট", "পাতা"];
@@ -99,7 +114,9 @@ const FIELD_STYLE: React.CSSProperties = {
 };
 
 function getUnitLabel(type: MedicineType): string {
-  if (type === "ট্যাবলেট" || type === "ক্যাপসুল") return "mg";
+  if (type === "ট্যাবলেট" || type === "ক্যাপসুল" || type === "সাপোজিটরি") return "mg";
+  if (type === "IV" || type === "ইনজেকশন") return "ml";
+  if (type === "ORS") return "gm";
   return "ml";
 }
 
@@ -1025,6 +1042,17 @@ export default function App() {
                             <SelectItem value="সিরাপ">সিরাপ</SelectItem>
                             <SelectItem value="ক্যাপসুল">ক্যাপসুল</SelectItem>
                             <SelectItem value="ড্রপ">ড্রপ</SelectItem>
+                            <SelectItem value="ইনজেকশন">ইনজেকশন</SelectItem>
+                            <SelectItem value="IV">IV</SelectItem>
+                            <SelectItem value="ORS">ORS</SelectItem>
+                            <SelectItem value="ক্রিম">ক্রিম</SelectItem>
+                            <SelectItem value="অয়েন্টমেন্ট">অয়েন্টমেন্ট</SelectItem>
+                            <SelectItem value="সাপোজিটরি">সাপোজিটরি</SelectItem>
+                            <SelectItem value="ইনহেলার">ইনহেলার</SelectItem>
+                            <SelectItem value="পাউডার">পাউডার</SelectItem>
+                            <SelectItem value="জেল">জেল</SelectItem>
+                            <SelectItem value="লোশন">লোশন</SelectItem>
+                            <SelectItem value="স্প্রে">স্প্রে</SelectItem>
                           </SelectContent>
                         </Select>
                       </td>
