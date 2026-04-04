@@ -31,29 +31,38 @@ declare const html2canvas: (
     allowTaint?: boolean;
     backgroundColor?: string | null;
     logging?: boolean;
+    width?: number;
+    height?: number;
+    windowWidth?: number;
   },
 ) => Promise<HTMLCanvasElement>;
 
-// jsPDF is loaded from CDN in index.html
-declare const jspdf: {
-  jsPDF: new (
-    orientation?: string,
-    unit?: string,
-    format?: string | number[],
-  ) => {
-    addImage: (
-      imageData: string,
-      format: string,
-      x: number,
-      y: number,
-      width: number,
-      height: number,
-    ) => void;
-    addPage: () => void;
-    save: (filename: string) => void;
-    internal: { pageSize: { getWidth: () => number; getHeight: () => number } };
-  };
-};
+// jsPDF is loaded from CDN in index.html as window.jspdf
+declare global {
+  interface Window {
+    jspdf: {
+      jsPDF: new (
+        orientation?: string,
+        unit?: string,
+        format?: string | number[],
+      ) => {
+        addImage: (
+          imageData: string,
+          format: string,
+          x: number,
+          y: number,
+          width: number,
+          height: number,
+        ) => void;
+        addPage: () => void;
+        save: (filename: string) => void;
+        internal: {
+          pageSize: { getWidth: () => number; getHeight: () => number };
+        };
+      };
+    };
+  }
+}
 
 type MedicineType = "ট্যাবলেট" | "সিরাপ" | "ক্যাপসুল" | "ড্রপ";
 type UnitLabel = "টি" | "পিস" | "বক্স" | "প্যাকেট" | "পাতা";
@@ -380,90 +389,109 @@ export default function App() {
         alert("ইনভয়েস এলিমেন্ট খুঁজে পাওয়া যায়নি।");
         return;
       }
-
-      // Hide non-printable elements temporarily
-      const noPrintEls = Array.from(invoiceEl.querySelectorAll(".no-print"));
-      const originalDisplays: string[] = [];
-      for (const el of noPrintEls) {
-        const htmlEl = el as HTMLElement;
-        originalDisplays.push(htmlEl.style.display);
-        htmlEl.style.display = "none";
+      if (!window.jspdf) {
+        alert("PDF লাইব্রেরি লোড হয়নি। পেজ রিলোড করে আবার চেষ্টা করুন।");
+        return;
       }
 
-      // Temporarily constrain to A4 width for consistent PDF capture
-      const origWidth = invoiceEl.style.width;
-      const origMaxWidth = invoiceEl.style.maxWidth;
+      // Hide no-print elements before capture
+      const noPrintEls = Array.from(
+        invoiceEl.querySelectorAll(".no-print"),
+      ) as HTMLElement[];
+      const origDisplays = noPrintEls.map((el) => el.style.display);
+      for (const el of noPrintEls) {
+        el.style.display = "none";
+      }
+
+      // Make overflow visible so html2canvas can capture full width
       const origOverflow = invoiceEl.style.overflow;
-      invoiceEl.style.width = "794px";
-      invoiceEl.style.maxWidth = "794px";
       invoiceEl.style.overflow = "visible";
 
+      // Wait for layout to settle
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+
+      // Capture at the element's full scrollWidth so nothing gets clipped
+      const captureWidth = invoiceEl.scrollWidth;
+      const captureHeight = invoiceEl.scrollHeight;
+
       const canvas = await html2canvas(invoiceEl, {
-        scale: 3,
+        scale: 2,
         useCORS: true,
         allowTaint: true,
         backgroundColor: "#ffffff",
         logging: false,
+        width: captureWidth,
+        height: captureHeight,
+        windowWidth: captureWidth,
       });
 
-      // Restore A4 overrides
-      invoiceEl.style.width = origWidth;
-      invoiceEl.style.maxWidth = origMaxWidth;
+      // Restore styles
       invoiceEl.style.overflow = origOverflow;
-
-      // Restore hidden elements
       for (let i = 0; i < noPrintEls.length; i++) {
-        (noPrintEls[i] as HTMLElement).style.display = originalDisplays[i];
+        noPrintEls[i].style.display = origDisplays[i];
       }
 
-      const imgData = canvas.toDataURL("image/jpeg", 1.0);
+      const imgData = canvas.toDataURL("image/jpeg", 0.95);
 
-      // A4 dimensions in mm
-      const a4Width = 210;
-      const a4Height = 297;
+      // A4 dimensions in mm (portrait)
+      const marginMm = 8;
+      const pageW = 210;
+      const pageH = 297;
+      const printableW = pageW - marginMm * 2; // 194mm
+      const printableH = pageH - marginMm * 2; // 281mm
 
-      const { jsPDF } = jspdf;
+      // Scale image to fit printableW, preserving aspect ratio
+      const canvasAspect = canvas.height / canvas.width;
+      const imgH = printableW * canvasAspect;
+
+      const { jsPDF } = window.jspdf;
       const pdf = new jsPDF("portrait", "mm", "a4");
 
-      const canvasWidth = canvas.width;
-      const canvasHeight = canvas.height;
-      const ratio = canvasHeight / canvasWidth;
-
-      // Scale image to fit A4 width
-      const imgWidth = a4Width;
-      const imgHeight = a4Width * ratio;
-
-      if (imgHeight <= a4Height) {
-        // Single page
-        pdf.addImage(imgData, "JPEG", 0, 0, imgWidth, imgHeight);
+      if (imgH <= printableH) {
+        // Single page — fits perfectly
+        pdf.addImage(imgData, "JPEG", marginMm, marginMm, printableW, imgH);
       } else {
-        // Multi-page: slice canvas into A4-height pages
-        const pageHeightPx = Math.floor(canvasWidth * (a4Height / a4Width));
+        // Multi-page: slice canvas by height
+        const pageHeightPx = Math.round(
+          canvas.width * (printableH / printableW),
+        );
         let offsetY = 0;
-        while (offsetY < canvasHeight) {
-          const sliceHeight = Math.min(pageHeightPx, canvasHeight - offsetY);
+        let pageNum = 0;
+        while (offsetY < canvas.height) {
+          const sliceH = Math.min(pageHeightPx, canvas.height - offsetY);
           const pageCanvas = document.createElement("canvas");
-          pageCanvas.width = canvasWidth;
-          pageCanvas.height = sliceHeight;
+          pageCanvas.width = canvas.width;
+          pageCanvas.height = sliceH;
           const ctx = pageCanvas.getContext("2d");
           if (ctx) {
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, canvas.width, sliceH);
             ctx.drawImage(
               canvas,
               0,
               offsetY,
-              canvasWidth,
-              sliceHeight,
+              canvas.width,
+              sliceH,
               0,
               0,
-              canvasWidth,
-              sliceHeight,
+              canvas.width,
+              sliceH,
             );
           }
-          const pageData = pageCanvas.toDataURL("image/jpeg", 1.0);
-          const pageImgHeight = a4Width * (sliceHeight / canvasWidth);
-          if (offsetY > 0) pdf.addPage();
-          pdf.addImage(pageData, "JPEG", 0, 0, a4Width, pageImgHeight);
-          offsetY += sliceHeight;
+          const pageData = pageCanvas.toDataURL("image/jpeg", 0.95);
+          const pageImgH = printableW * (sliceH / canvas.width);
+          if (pageNum > 0) pdf.addPage();
+          pdf.addImage(
+            pageData,
+            "JPEG",
+            marginMm,
+            marginMm,
+            printableW,
+            pageImgH,
+          );
+          offsetY += sliceH;
+          pageNum++;
         }
       }
 
@@ -815,20 +843,20 @@ export default function App() {
                 style={{
                   ...tableFontStyle,
                   tableLayout: "fixed",
-                  minWidth: "1100px",
+                  minWidth: "715px",
                 }}
                 data-ocid="invoice.table"
               >
                 <colgroup>
-                  <col style={{ width: "36px" }} />
-                  <col style={{ width: "340px" }} />
-                  <col style={{ width: "120px" }} />
-                  <col style={{ width: "100px" }} />
-                  <col style={{ width: "100px" }} />
-                  <col style={{ width: "100px" }} />
-                  <col style={{ width: "100px" }} />
-                  <col style={{ width: "100px" }} />
-                  <col style={{ width: "44px" }} className="no-print" />
+                  <col style={{ width: "30px" }} />
+                  <col style={{ width: "200px" }} />
+                  <col style={{ width: "85px" }} />
+                  <col style={{ width: "80px" }} />
+                  <col style={{ width: "80px" }} />
+                  <col style={{ width: "80px" }} />
+                  <col style={{ width: "80px" }} />
+                  <col style={{ width: "80px" }} />
+                  <col style={{ width: "40px" }} className="no-print" />
                 </colgroup>
                 <thead>
                   <tr className="invoice-table-thead">
